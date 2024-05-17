@@ -9,7 +9,7 @@ import { OfflineIndicator } from "./base/OfflineIndicator.js"
 import { OfflineIndicatorViewModel } from "./base/OfflineIndicatorViewModel.js"
 import { NewsModel } from "../misc/news/NewsModel.js"
 import { locator } from "../api/main/MainLocator.js"
-import { ProgressBar } from "./base/ProgressBar.js"
+import { ProgressBar } from "@tutao/linden"
 import { DesktopBaseHeader } from "./base/DesktopBaseHeader.js"
 
 assertMainOrNode()

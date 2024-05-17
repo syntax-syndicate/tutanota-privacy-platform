@@ -1,4 +1,4 @@
-import { PROGRESS_DONE } from "./ProgressBar.js"
+import { PROGRESS_DONE } from "@tutao/linden"
 import Stream from "mithril/stream"
 import { WsConnectionState } from "../../api/main/WorkerClient.js"
 import { ExposedCacheStorage } from "../../api/worker/rest/DefaultEntityRestCache.js"

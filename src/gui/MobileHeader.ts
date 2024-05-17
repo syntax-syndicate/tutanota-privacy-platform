@@ -7,12 +7,11 @@ import { IconButton } from "./base/IconButton.js"
 import { BootIcons } from "./base/icons/BootIcons.js"
 import { styles } from "./styles.js"
 import { OfflineIndicator } from "./base/OfflineIndicator.js"
-import { ProgressBar } from "./base/ProgressBar.js"
 import { CounterBadge } from "./base/CounterBadge.js"
 import { px } from "./size.js"
 import { theme } from "./theme.js"
 import { NewsModel } from "../misc/news/NewsModel.js"
-import { ClickHandler } from "@tutao/linden"
+import { ClickHandler, ProgressBar } from "@tutao/linden"
 
 export interface MobileHeaderAttrs extends AppHeaderAttrs {
 	columnType: "first" | "other"

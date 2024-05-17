@@ -3,7 +3,6 @@ import { IconButton } from "../../gui/base/IconButton.js"
 import { ViewSlider } from "../../gui/nav/ViewSlider.js"
 import { BaseMobileHeader } from "../../gui/BaseMobileHeader.js"
 import { OfflineIndicator } from "../../gui/base/OfflineIndicator.js"
-import { ProgressBar } from "../../gui/base/ProgressBar.js"
 import { Icons } from "../../gui/base/icons/Icons.js"
 import { CalendarNavConfiguration, CalendarViewType, getIconForViewType } from "../gui/CalendarGuiUtils.js"
 import { MobileHeaderMenuButton, MobileHeaderTitle } from "../../gui/MobileHeader.js"
@@ -14,7 +13,7 @@ import { styles } from "../../gui/styles.js"
 import { theme } from "../../gui/theme.js"
 import { TodayIconButton } from "./TodayIconButton.js"
 import { ExpanderButton } from "../../gui/base/Expander.js"
-import { ClickHandler } from "@tutao/linden"
+import { ProgressBar, ClickHandler } from "@tutao/linden"
 
 export interface CalendarMobileHeaderAttrs extends AppHeaderAttrs {
 	viewType: CalendarViewType

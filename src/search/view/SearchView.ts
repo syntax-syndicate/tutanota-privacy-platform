@@ -62,7 +62,6 @@ import { BackgroundColumnLayout } from "../../gui/BackgroundColumnLayout.js"
 import { DesktopListToolbar, DesktopViewerToolbar } from "../../gui/DesktopToolbars.js"
 import { MailViewerActions } from "../../mail/view/MailViewerToolbar.js"
 import { BaseMobileHeader } from "../../gui/BaseMobileHeader.js"
-import { ProgressBar } from "../../gui/base/ProgressBar.js"
 import { EnterMultiselectIconButton } from "../../gui/EnterMultiselectIconButton.js"
 import { MobileHeader, MobileHeaderMenuButton } from "../../gui/MobileHeader.js"
 import { MobileActionAttrs, MobileActionBar } from "../../contacts/view/MobileActionBar.js"
@@ -102,7 +101,7 @@ import { getEventWithDefaultTimes } from "../../api/common/utils/CommonCalendarU
 import { showNewCalendarEventEditDialog } from "../../calendar/gui/eventeditor-view/CalendarEventEditDialog.js"
 import { getSharedGroupName } from "../../sharing/GroupUtils.js"
 import { YEAR_IN_MILLIS } from "@tutao/tutanota-utils/dist/DateUtils.js"
-import { ClickHandler } from "@tutao/linden"
+import { ClickHandler, ProgressBar } from "@tutao/linden"
 
 assertMainOrNode()
 
