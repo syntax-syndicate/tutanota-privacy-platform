@@ -1,5 +1,5 @@
 import m, { Children, ClassComponent, Vnode } from "mithril"
-import { AriaLandmarks, landmarkAttrs } from "../AriaUtils.js"
+import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { px, size, size as sizes } from "../size.js"
 import { theme } from "../theme.js"
 

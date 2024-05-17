@@ -1,5 +1,5 @@
 import m, { Child, Children, Component, Vnode } from "mithril"
-import { AriaLandmarks, landmarkAttrs } from "../AriaUtils"
+import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { assertMainOrNode } from "../../api/common/Env"
 
 assertMainOrNode()

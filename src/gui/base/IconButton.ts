@@ -3,11 +3,10 @@ import type { TranslationText } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
 import type { AllIcons } from "./Icon"
 import { Icon } from "./Icon"
-import type { ClickHandler } from "./GuiUtils"
 import { assertMainOrNode } from "../../api/common/Env"
 import { ButtonColor, getColors } from "./Button.js"
 import { ButtonSize } from "./ButtonSize.js"
-import { BaseButton, BaseButtonAttrs } from "./buttons/BaseButton.js"
+import { BaseButton, BaseButtonAttrs, ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()
 

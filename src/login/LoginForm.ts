@@ -1,7 +1,7 @@
 import m, { Children, Component, Vnode } from "mithril"
 import stream from "mithril/stream"
 import Stream from "mithril/stream"
-import { liveDataAttrs } from "../gui/AriaUtils"
+import { liveDataAttrs } from "@tutao/linden"
 import { lang, TranslationKey } from "../misc/LanguageViewModel"
 import { Autocomplete, TextField, TextFieldType } from "../gui/base/TextField.js"
 import { Checkbox } from "../gui/base/Checkbox.js"

@@ -5,7 +5,7 @@ import { displayOverlay } from "./Overlay"
 import type { ButtonAttrs } from "./Button.js"
 import { Button, ButtonType } from "./Button.js"
 import { assertMainOrNode } from "../../api/common/Env"
-import { ClickHandler } from "./GuiUtils"
+import { ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()
 

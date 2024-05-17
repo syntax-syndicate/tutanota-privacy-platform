@@ -12,7 +12,7 @@ import { CounterBadge } from "./base/CounterBadge.js"
 import { px } from "./size.js"
 import { theme } from "./theme.js"
 import { NewsModel } from "../misc/news/NewsModel.js"
-import { ClickHandler } from "./base/GuiUtils.js"
+import { ClickHandler } from "@tutao/linden"
 
 export interface MobileHeaderAttrs extends AppHeaderAttrs {
 	columnType: "first" | "other"

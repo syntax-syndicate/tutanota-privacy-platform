@@ -7,10 +7,10 @@ import { lang } from "../../misc/LanguageViewModel"
 import { progressIcon } from "../base/Icon"
 import { CompletenessIndicator } from "../CompletenessIndicator.js"
 import Stream from "mithril/stream"
-import { TabIndex } from "../../api/common/TutanotaConstants"
 import type { lazy } from "@tutao/tutanota-utils"
 import { delay } from "@tutao/tutanota-utils"
 import { DialogHeaderBar, DialogHeaderBarAttrs } from "../base/DialogHeaderBar.js"
+import { TabIndex } from "@tutao/linden"
 
 assertMainOrNode()
 

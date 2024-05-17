@@ -1,8 +1,7 @@
 import m, { Children, ClassComponent, Vnode, VnodeDOM } from "mithril"
-import { ClickHandler } from "../GuiUtils.js"
 import { assertNotNull } from "@tutao/tutanota-utils"
-import { TabIndex } from "../../../api/common/TutanotaConstants.js"
-import { AriaRole } from "../../AriaUtils.js"
+import { AriaRole } from "./AriaUtils.js"
+import { ClickHandler, TabIndex } from "./Utils.js"
 
 // `staticRightText` to be passed as a child
 export interface BaseButtonAttrs {

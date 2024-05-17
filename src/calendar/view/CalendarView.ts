@@ -9,7 +9,7 @@ import { Icons } from "../../gui/base/icons/Icons"
 import { downcast, getStartOfDay, isSameDayOfDate, ofClass } from "@tutao/tutanota-utils"
 import type { CalendarEvent, GroupSettings, UserSettingsGroupRoot } from "../../api/entities/tutanota/TypeRefs.js"
 import { createGroupSettings } from "../../api/entities/tutanota/TypeRefs.js"
-import { defaultCalendarColor, GroupType, Keys, reverse, ShareCapability, TabIndex, TimeFormat, WeekStart } from "../../api/common/TutanotaConstants"
+import { defaultCalendarColor, GroupType, Keys, reverse, ShareCapability, TimeFormat, WeekStart } from "../../api/common/TutanotaConstants"
 import { locator } from "../../api/main/MainLocator"
 import { getStartOfTheWeekOffset, getStartOfTheWeekOffsetForUser, getTimeZone, getWeekNumber } from "../date/CalendarUtils"
 import { ButtonColor } from "../../gui/base/Button.js"
@@ -65,6 +65,7 @@ import { Time } from "../date/Time.js"
 import { DaySelectorSidebar } from "../gui/day-selector/DaySelectorSidebar.js"
 import { CalendarOperation } from "../gui/eventeditor-model/CalendarEventModel.js"
 import { DaySelectorPopup } from "../gui/day-selector/DaySelectorPopup.js"
+import { TabIndex } from "@tutao/linden"
 
 export type GroupColors = Map<Id, string>
 

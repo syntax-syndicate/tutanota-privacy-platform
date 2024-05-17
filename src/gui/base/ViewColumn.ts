@@ -1,5 +1,5 @@
 import m, { Component } from "mithril"
-import { AriaLandmarks, landmarkAttrs } from "../AriaUtils"
+import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { LayerType } from "../../RootView"
 import type { lazy } from "@tutao/tutanota-utils"
 import { assertMainOrNode } from "../../api/common/Env"

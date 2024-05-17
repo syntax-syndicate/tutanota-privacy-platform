@@ -7,7 +7,7 @@ import { isMailAddress } from "../../misc/FormatValidator"
 import { UserError } from "../../api/main/UserError"
 import { showUserError } from "../../misc/ErrorHandlerImpl"
 import type { MailboxDetail } from "../model/MailModel"
-import { Keys, MailMethod, TabIndex } from "../../api/common/TutanotaConstants"
+import { Keys, MailMethod } from "../../api/common/TutanotaConstants"
 import { getDefaultSender } from "../model/MailUtils"
 import { progressIcon } from "../../gui/base/Icon"
 import { Editor } from "../../gui/editor/Editor"
@@ -17,6 +17,7 @@ import { TextField } from "../../gui/base/TextField.js"
 import { DialogHeaderBarAttrs } from "../../gui/base/DialogHeaderBar"
 import { RichTextToolbar } from "../../gui/base/RichTextToolbar.js"
 import { locator } from "../../api/main/MainLocator.js"
+import { TabIndex } from "@tutao/linden"
 
 type PressContact = {
 	email: string

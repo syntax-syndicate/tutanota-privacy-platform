@@ -1,6 +1,6 @@
 {
 	"name": "@tutao/linden",
-	"version": "1.0.0",
+	"version": "229.240514.1",
 	"description": "A mithril based UI component library",
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -15,7 +15,11 @@
 		"LICENSE.txt",
 		"tsconfig.json"
 	],
+	"exports": {
+		".": "./dist/index.js"
+	},
 	"dependencies": {
+		"@tutao/tutanota-utils": "229.240514.1",
 		"mithril": "2.2.2"
 	},
 	"devDependencies": {

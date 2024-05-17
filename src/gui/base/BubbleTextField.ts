@@ -4,7 +4,7 @@ import { TranslationText } from "../../misc/LanguageViewModel"
 import { Keys } from "../../api/common/TutanotaConstants"
 import { createAsyncDropdown, DropdownChildAttrs } from "./Dropdown.js"
 import { lazy } from "@tutao/tutanota-utils"
-import { BaseButton } from "./buttons/BaseButton.js"
+import { BaseButton } from "@tutao/linden"
 
 export interface BubbleTextFieldAttrs {
 	label: TranslationText

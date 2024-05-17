@@ -1,5 +1,6 @@
 import m, { Children, Component, Vnode } from "mithril"
-import type { ClickHandler } from "./GuiUtils"
+
+import { ClickHandler } from "@tutao/linden"
 
 export type Attrs = {
 	label: string

@@ -15,8 +15,8 @@ import { parseDate } from "../../../misc/DateParser.js"
 import renderSwitchMonthArrowIcon from "../../../gui/base/buttons/ArrowButton.js"
 import { getCalendarMonth } from "../CalendarGuiUtils.js"
 import { isKeyPressed, keyboardEventToKeyPress, keyHandler, KeyPress, useKeyHandler } from "../../../misc/KeyManager.js"
-import { Keys, TabIndex } from "../../../api/common/TutanotaConstants.js"
-import { AriaPopupType } from "../../../gui/AriaUtils.js"
+import { Keys } from "../../../api/common/TutanotaConstants.js"
+import { AriaPopupType, TabIndex } from "@tutao/linden"
 
 export interface DatePickerAttrs {
 	date: Date

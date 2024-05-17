@@ -4,9 +4,8 @@ import { lang } from "../../misc/LanguageViewModel"
 import { getContentButtonIconBackground, getElevatedBackground, getNavButtonIconBackground, getNavigationMenuIcon, theme } from "../theme"
 import type { lazy } from "@tutao/tutanota-utils"
 import { noOp } from "@tutao/tutanota-utils"
-import type { ClickHandler } from "./GuiUtils"
 import { assertMainOrNode } from "../../api/common/Env"
-import { BaseButton } from "./buttons/BaseButton.js"
+import { BaseButton, ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()
 

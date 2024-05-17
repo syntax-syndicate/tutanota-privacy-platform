@@ -8,7 +8,7 @@ import { ease } from "../animation/Easing.js"
 import { theme } from "../theme.js"
 import { assertNotNull } from "@tutao/tutanota-utils"
 import { styles } from "../styles.js"
-import { AriaLandmarks } from "../AriaUtils.js"
+import { AriaLandmarks } from "@tutao/linden"
 import { LayerType } from "../../RootView.js"
 import { assertMainOrNode } from "../../api/common/Env.js"
 

@@ -5,9 +5,9 @@ import { px } from "../size"
 import { Dialog } from "../base/Dialog"
 import { isMailAddress } from "../../misc/FormatValidator"
 import type { ImageHandler } from "../../mail/model/MailUtils"
-import { TabIndex } from "../../api/common/TutanotaConstants"
 import { TextFieldType } from "../base/TextField.js"
 import { HTML_EDITOR_LINE_HEIGHT } from "./HtmlEditor.js"
+import { TabIndex } from "@tutao/linden"
 
 type SanitizerFn = (html: string, isPaste: boolean) => DocumentFragment
 export type ImagePasteEvent = CustomEvent<{ clipboardData: DataTransfer }>

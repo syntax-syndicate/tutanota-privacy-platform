@@ -1,8 +1,6 @@
 import m, { Component, Vnode } from "mithril"
-import { BaseButton } from "./BaseButton.js"
 import { AllIcons, Icon } from "../Icon.js"
-import { ClickHandler } from "../GuiUtils.js"
-import { AriaRole } from "../../AriaUtils.js"
+import { AriaRole, BaseButton, ClickHandler } from "@tutao/linden"
 import { theme } from "../../theme.js"
 import { lang, TranslationText } from "../../../misc/LanguageViewModel.js"
 

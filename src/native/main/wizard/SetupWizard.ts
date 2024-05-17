@@ -6,7 +6,6 @@ import m from "mithril"
 import { SetupNotificationsPage, SetupNotificationsPageAttrs } from "./setupwizardpages/SetupNotificationsPage.js"
 import { BannerButton } from "../../../gui/base/buttons/BannerButton.js"
 import { theme } from "../../../gui/theme.js"
-import { ClickHandler } from "../../../gui/base/GuiUtils.js"
 import { DialogType } from "../../../gui/base/Dialog.js"
 import { TranslationKey } from "../../../misc/LanguageViewModel.js"
 import { SetupThemePage, SetupThemePageAttrs } from "./setupwizardpages/SetupThemePage.js"
@@ -18,6 +17,7 @@ import { ContactImporter } from "../../../contacts/ContactImporter.js"
 import { MobileSystemFacade } from "../../common/generatedipc/MobileSystemFacade.js"
 import { CredentialsProvider } from "../../../misc/credentials/CredentialsProvider.js"
 import { NativeContactsSyncManager } from "../../../contacts/model/NativeContactsSyncManager.js"
+import { ClickHandler } from "@tutao/linden"
 
 export function renderPermissionButton(permissionName: TranslationKey, isPermissionGranted: boolean, onclick: ClickHandler) {
 	return renderBannerButton(isPermissionGranted ? "granted_msg" : permissionName, onclick, isPermissionGranted)

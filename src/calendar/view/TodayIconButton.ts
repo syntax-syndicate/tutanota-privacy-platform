@@ -1,7 +1,7 @@
 import { IconButtonAttrs } from "../../gui/base/IconButton.js"
 import m, { Children, Component, Vnode } from "mithril"
 import { Icons } from "../../gui/base/icons/Icons.js"
-import { BaseButton } from "../../gui/base/buttons/BaseButton.js"
+import { BaseButton } from "@tutao/linden"
 import { Icon } from "../../gui/base/Icon.js"
 import { theme } from "../../gui/theme.js"
 import { lang } from "../../misc/LanguageViewModel.js"

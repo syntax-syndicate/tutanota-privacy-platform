@@ -884,14 +884,6 @@ export const Keys = Object.freeze({
 	},
 })
 
-// See: https://webaim.org/techniques/keyboard/tabindex#overview
-
-export const enum TabIndex {
-	Programmatic = "-1",
-	// focus on element can only be set programmatically
-	Default = "0", // regular tab order
-}
-
 // Keep non-const for admin
 export enum ReportedMailFieldType {
 	/**

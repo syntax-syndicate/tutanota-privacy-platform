@@ -1,8 +1,7 @@
 import m, { Children, ClassComponent, Vnode } from "mithril"
-import { AriaLandmarks, landmarkAttrs } from "../AriaUtils.js"
+import { AriaLandmarks, BaseButton, BaseButtonAttrs, landmarkAttrs, TabIndex } from "@tutao/linden"
 import { inputLineHeight, px, size } from "../size.js"
 import { styles } from "../styles.js"
-import { TabIndex } from "../../api/common/TutanotaConstants.js"
 import { BootIcons } from "./icons/BootIcons.js"
 import { DefaultAnimationTime } from "../animation/Animations.js"
 import { Icons } from "./icons/Icons.js"
@@ -10,7 +9,6 @@ import { TextFieldType } from "./TextField.js"
 import { Icon, IconAttrs } from "./Icon.js"
 import { theme } from "../theme.js"
 import { lang } from "../../misc/LanguageViewModel.js"
-import { BaseButton, BaseButtonAttrs } from "./buttons/BaseButton.js"
 import { getOperatingClasses } from "./GuiUtils.js"
 
 export interface BaseSearchBarAttrs {

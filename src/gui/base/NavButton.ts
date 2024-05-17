@@ -11,9 +11,9 @@ import type { TranslationKey } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
 import { Keys } from "../../api/common/TutanotaConstants"
 import { isKeyPressed } from "../../misc/KeyManager"
-import type { dropHandler } from "./GuiUtils"
 import { assertMainOrNode } from "../../api/common/Env"
 import { stateBgHover } from "../builtinThemes.js"
+import { dropHandler } from "@tutao/linden"
 
 assertMainOrNode()
 export type NavButtonAttrs = {

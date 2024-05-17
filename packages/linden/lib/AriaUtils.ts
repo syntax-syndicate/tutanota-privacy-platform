@@ -1,4 +1,3 @@
-import { assertMainOrNodeBoot } from "../api/common/Env"
 /**
  * Collections of utility functions to support Accessible Rich Internet Applications (ARIA).
  *
@@ -8,12 +7,11 @@ import { assertMainOrNodeBoot } from "../api/common/Env"
  * https://www.w3.org/TR/wai-aria-1.1/
  *
  */
-import { TabIndex } from "../api/common/TutanotaConstants"
 
-assertMainOrNodeBoot()
+import { TabIndex } from "./Utils.js"
 
 // See: https://webaim.org/techniques/aria/#landmarks
-export const enum AriaLandmarks {
+export enum AriaLandmarks {
 	Banner = "banner",
 	Search = "search",
 	Navigation = "navigation",
@@ -23,7 +21,7 @@ export const enum AriaLandmarks {
 	Region = "region",
 }
 
-export const enum AriaLiveRegions {
+export enum AriaLiveRegions {
 	Alert = "alert",
 	Log = "log",
 	Marquee = "Marquee",
@@ -31,7 +29,7 @@ export const enum AriaLiveRegions {
 	Timer = "timer",
 }
 
-export const enum AriaWindow {
+export enum AriaWindow {
 	AlertDialog = "alertdialog",
 	Dialog = "dialog",
 }
@@ -52,7 +50,7 @@ export function liveDataAttrs(): Record<string, string> {
 	}
 }
 
-export const enum AriaPopupType {
+export enum AriaPopupType {
 	None = "false",
 	Menu = "menu",
 	ListBox = "listbox",
@@ -61,7 +59,7 @@ export const enum AriaPopupType {
 	Dialog = "dialog",
 }
 
-export const enum AriaRole {
+export enum AriaRole {
 	Menu = "Menu",
 	MenuItem = "menuitem",
 	Option = "option",

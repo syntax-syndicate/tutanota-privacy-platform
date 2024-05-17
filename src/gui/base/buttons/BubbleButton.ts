@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { BaseButton, BaseButtonAttrs } from "./BaseButton.js"
+import { BaseButton, BaseButtonAttrs } from "@tutao/linden"
 import { lang, TranslationText } from "../../../misc/LanguageViewModel.js"
 import { AllIcons, Icon } from "../Icon.js"
 import { theme } from "../../theme.js"

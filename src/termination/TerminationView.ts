@@ -1,7 +1,7 @@
 import m, { Children, Vnode } from "mithril"
 import { assertMainOrNode } from "../api/common/Env.js"
 import { windowFacade } from "../misc/WindowFacade.js"
-import { AriaLandmarks, landmarkAttrs } from "../gui/AriaUtils.js"
+import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { lang } from "../misc/LanguageViewModel.js"
 import { TerminationViewModel } from "./TerminationViewModel.js"
 import { TerminationForm } from "./TerminationForm.js"

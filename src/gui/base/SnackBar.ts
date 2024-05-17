@@ -7,8 +7,8 @@ import { Button, ButtonType } from "./Button.js"
 import { lang, TranslationText } from "../../misc/LanguageViewModel"
 import { styles } from "../styles"
 import { LayerType } from "../../RootView"
-import type { ClickHandler } from "./GuiUtils"
 import { assertMainOrNode } from "../../api/common/Env"
+import { ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()
 export const SNACKBAR_SHOW_TIME = 6000

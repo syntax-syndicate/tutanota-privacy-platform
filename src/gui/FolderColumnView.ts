@@ -3,10 +3,8 @@ import { theme } from "./theme.js"
 import m, { Children, Component, Vnode } from "mithril"
 import type { TranslationKey } from "../misc/LanguageViewModel.js"
 import { lang } from "../misc/LanguageViewModel.js"
-import { AriaLandmarks, landmarkAttrs } from "./AriaUtils.js"
-import type { ClickHandler } from "./base/GuiUtils.js"
+import { AriaLandmarks, BaseButton, BaseButtonAttrs, ClickHandler, landmarkAttrs } from "@tutao/linden"
 import type { lazy } from "@tutao/tutanota-utils"
-import { BaseButton, BaseButtonAttrs } from "./base/buttons/BaseButton.js"
 import { px, size } from "./size.js"
 
 export type Attrs = {

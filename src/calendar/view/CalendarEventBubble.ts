@@ -2,8 +2,8 @@ import m, { Child, Children, Component, Vnode } from "mithril"
 import { px, size } from "../../gui/size"
 import { Icon } from "../../gui/base/Icon"
 import { Icons } from "../../gui/base/icons/Icons"
-import type { ClickHandler } from "../../gui/base/GuiUtils"
 import { colorForBg } from "../gui/CalendarGuiUtils.js"
+import { ClickHandler } from "@tutao/linden"
 
 export type CalendarEventBubbleAttrs = {
 	text: string

@@ -3,7 +3,6 @@ import { Dialog } from "../gui/base/Dialog"
 import type { TranslationKey, TranslationText } from "./LanguageViewModel"
 import { lang } from "./LanguageViewModel"
 import { isIOSApp } from "../api/common/Env"
-import type { ClickHandler } from "../gui/base/GuiUtils"
 import { locator } from "../api/main/MainLocator"
 import type { UserController } from "../api/main/UserController.js"
 import { BookingTypeRef } from "../api/entities/sys/TypeRefs.js"
@@ -12,6 +11,7 @@ import { AvailablePlanType, Const, NewBusinessPlans, NewPaidPlans, NewPersonalPl
 import { showSwitchDialog } from "../subscription/SwitchSubscriptionDialog.js"
 import { ProgrammingError } from "../api/common/error/ProgrammingError.js"
 import { getAvailableMatchingPlans } from "../subscription/SubscriptionUtils.js"
+import { ClickHandler } from "@tutao/linden"
 
 /**
  * Opens a dialog which states that the function is not available in the Free subscription and provides an option to upgrade.

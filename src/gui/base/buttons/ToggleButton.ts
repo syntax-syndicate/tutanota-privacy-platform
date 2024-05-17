@@ -3,7 +3,7 @@ import { AllIcons, Icon } from "../Icon.js"
 import { lang, TranslationText } from "../../../misc/LanguageViewModel.js"
 import { ButtonColor, getColors } from "../Button.js"
 import { ButtonSize } from "../ButtonSize.js"
-import { BaseButton } from "./BaseButton.js"
+import { BaseButton } from "@tutao/linden"
 
 export interface ToggleButtonAttrs {
 	icon: AllIcons

@@ -12,9 +12,9 @@ import { attachDropdown } from "../../gui/base/Dropdown.js"
 import { TranslationKey } from "../../misc/LanguageViewModel.js"
 import { styles } from "../../gui/styles.js"
 import { theme } from "../../gui/theme.js"
-import { ClickHandler } from "../../gui/base/GuiUtils.js"
 import { TodayIconButton } from "./TodayIconButton.js"
 import { ExpanderButton } from "../../gui/base/Expander.js"
+import { ClickHandler } from "@tutao/linden"
 
 export interface CalendarMobileHeaderAttrs extends AppHeaderAttrs {
 	viewType: CalendarViewType

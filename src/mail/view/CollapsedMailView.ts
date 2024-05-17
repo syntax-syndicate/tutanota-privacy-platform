@@ -6,8 +6,9 @@ import { theme } from "../../gui/theme.js"
 import { AllIcons, Icon } from "../../gui/base/Icon.js"
 import { Icons } from "../../gui/base/icons/Icons.js"
 import { responsiveCardHPadding } from "../../gui/cards.js"
-import { Keys, TabIndex } from "../../api/common/TutanotaConstants.js"
+import { Keys } from "../../api/common/TutanotaConstants.js"
 import { isKeyPressed } from "../../misc/KeyManager.js"
+import { TabIndex } from "@tutao/linden"
 
 export interface CollapsedMailViewAttrs {
 	viewModel: MailViewerViewModel

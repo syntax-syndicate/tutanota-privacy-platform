@@ -20,7 +20,7 @@ import { CCViewModel, SimplifiedCreditCardInput } from "./SimplifiedCreditCardIn
 import { SimplifiedCreditCardViewModel } from "./SimplifiedCreditCardInputModel.js"
 import { isUpdateForTypeRef } from "../api/common/utils/EntityUpdateUtils.js"
 import { EntityEventsListener } from "../api/main/EventController.js"
-import { BaseButton } from "../gui/base/buttons/BaseButton.js"
+import { BaseButton } from "@tutao/linden"
 
 /**
  * Component to display the input fields for a payment method. The selector to switch between payment methods is not included.

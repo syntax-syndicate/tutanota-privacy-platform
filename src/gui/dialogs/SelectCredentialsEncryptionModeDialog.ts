@@ -9,13 +9,12 @@ import { RadioSelector } from "../base/RadioSelector"
 import { ButtonType } from "../base/Button.js"
 import { CredentialAuthenticationError } from "../../api/common/error/CredentialAuthenticationError"
 import { KeyPermanentlyInvalidatedError } from "../../api/common/error/KeyPermanentlyInvalidatedError"
-import { liveDataAttrs } from "../AriaUtils"
+import { BaseButton, liveDataAttrs } from "@tutao/linden"
 import type { DeferredObject } from "@tutao/tutanota-utils"
 import { defer } from "@tutao/tutanota-utils"
 import { windowFacade } from "../../misc/WindowFacade"
 import { CancelledError } from "../../api/common/error/CancelledError.js"
 import { Keys } from "../../api/common/TutanotaConstants.js"
-import { BaseButton } from "../base/buttons/BaseButton.js"
 
 export const DEFAULT_CREDENTIAL_ENCRYPTION_MODE = CredentialEncryptionMode.DEVICE_LOCK
 

@@ -6,9 +6,8 @@ import type { TranslationKey } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
 import type { lazy } from "@tutao/tutanota-utils"
 import { keyHandler, useKeyHandler } from "../../misc/KeyManager"
-import { TabIndex } from "../../api/common/TutanotaConstants"
-import { ClickHandler, getOperatingClasses } from "./GuiUtils"
-import { AriaPopupType } from "../AriaUtils.js"
+import { getOperatingClasses } from "./GuiUtils"
+import { AriaPopupType, ClickHandler, TabIndex } from "@tutao/linden"
 
 export type TextFieldAttrs = {
 	id?: string

@@ -7,10 +7,11 @@ import { Icon } from "./Icon"
 import { theme } from "../theme"
 import { lang, TranslationKey } from "../../misc/LanguageViewModel"
 import type { DialogHeaderBarAttrs } from "./DialogHeaderBar"
-import { Keys, TabIndex } from "../../api/common/TutanotaConstants"
+import { Keys } from "../../api/common/TutanotaConstants"
 import { assertMainOrNode } from "../../api/common/Env"
 import { $Promisable } from "@tutao/tutanota-utils"
 import { windowFacade } from "../../misc/WindowFacade.js"
+import { TabIndex } from "@tutao/linden"
 
 assertMainOrNode()
 

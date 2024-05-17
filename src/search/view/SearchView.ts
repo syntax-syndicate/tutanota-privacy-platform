@@ -39,7 +39,6 @@ import { getGroupInfoDisplayName } from "../../api/common/utils/GroupUtils"
 import { isNewMailActionAvailable } from "../../gui/nav/NavFunctions"
 import { TextField } from "../../gui/base/TextField.js"
 import { SidebarSection } from "../../gui/SidebarSection"
-import type { ClickHandler } from "../../gui/base/GuiUtils"
 import { DropDownSelector, DropDownSelectorAttrs, SelectorItem } from "../../gui/base/DropDownSelector.js"
 import { IconButton } from "../../gui/base/IconButton.js"
 import { ButtonSize } from "../../gui/base/ButtonSize.js"
@@ -103,6 +102,7 @@ import { getEventWithDefaultTimes } from "../../api/common/utils/CommonCalendarU
 import { showNewCalendarEventEditDialog } from "../../calendar/gui/eventeditor-view/CalendarEventEditDialog.js"
 import { getSharedGroupName } from "../../sharing/GroupUtils.js"
 import { YEAR_IN_MILLIS } from "@tutao/tutanota-utils/dist/DateUtils.js"
+import { ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()
 

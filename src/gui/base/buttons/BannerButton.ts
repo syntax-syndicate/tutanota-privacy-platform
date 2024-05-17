@@ -2,9 +2,8 @@ import { lang, TranslationKey } from "../../../misc/LanguageViewModel.js"
 import { lazy } from "@tutao/tutanota-utils"
 import m, { Children, Component, Vnode } from "mithril"
 import { px, size } from "../../size.js"
-import { BaseButton } from "./BaseButton.js"
+import { BaseButton, ClickHandler } from "@tutao/linden"
 import { theme } from "../../theme.js"
-import { ClickHandler } from "../GuiUtils.js"
 
 export type BannerButtonAttrs = {
 	borderColor: string

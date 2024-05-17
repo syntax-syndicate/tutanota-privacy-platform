@@ -1,6 +1,6 @@
 import m, { Children, Component } from "mithril"
 import { px } from "../size"
-import { AriaLandmarks, landmarkAttrs } from "../AriaUtils"
+import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { assertMainOrNode } from "../../api/common/Env"
 import { lang } from "../../misc/LanguageViewModel.js"
 import { Button, ButtonType } from "./Button.js"
