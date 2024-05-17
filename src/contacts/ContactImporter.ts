@@ -19,7 +19,7 @@ import {
 } from "../api/entities/tutanota/TypeRefs.js"
 import m, { Children } from "mithril"
 import { List, ListAttrs, ListLoadingState, MultiselectMode, RenderConfig, ViewHolder } from "../gui/base/List.js"
-import { px, size } from "../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { getContactListName } from "./model/ContactUtils.js"
 import { UserError } from "../api/main/UserError.js"
 import { DialogHeaderBar, DialogHeaderBarAttrs } from "../gui/base/DialogHeaderBar.js"

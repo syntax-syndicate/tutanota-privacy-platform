@@ -11,7 +11,7 @@ import {
 import { getContactListName } from "../model/ContactUtils.js"
 import { NBSP, noOp } from "@tutao/tutanota-utils"
 import m, { Children } from "mithril"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { VirtualRow } from "../../gui/base/ListUtils.js"
 
 export const shiftByForCheckbox = px(size.checkbox_size + size.hpad)

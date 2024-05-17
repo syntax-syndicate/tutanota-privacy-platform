@@ -4,7 +4,7 @@ import { stateBgHover } from "../../gui/builtinThemes.js"
 import { theme } from "../../gui/theme.js"
 import { styles } from "../../gui/styles.js"
 import { DefaultAnimationTime } from "../../gui/animation/Animations.js"
-import { px } from "../../gui/size.js"
+import { px } from "@tutao/linden"
 
 export interface CalendarAgendaItemViewAttrs {
 	day: Date

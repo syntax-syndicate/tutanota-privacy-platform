@@ -1,5 +1,5 @@
 import { Cat, log, timer } from "../misc/Log"
-import { size } from "./size"
+import { size } from "@tutao/linden"
 import { assertMainOrNodeBoot, isAdminClient, isTest } from "../api/common/Env"
 import { windowFacade } from "../misc/WindowFacade"
 import { theme, themeController } from "./theme"

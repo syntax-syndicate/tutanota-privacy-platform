@@ -1,5 +1,5 @@
 import m, { Component, Vnode } from "mithril"
-import { px, size } from "../size"
+import { px, size } from "@tutao/linden"
 import { DefaultAnimationTime } from "../animation/Animations"
 import { displayOverlay } from "./Overlay"
 import type { ButtonAttrs } from "./Button.js"

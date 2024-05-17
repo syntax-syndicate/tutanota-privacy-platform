@@ -17,7 +17,7 @@ import { ButtonColor } from "../../gui/base/Button.js"
 import { ButtonSize } from "../../gui/base/ButtonSize.js"
 import { MailFolderType } from "../../api/common/TutanotaConstants.js"
 import { isSpamOrTrashFolder } from "../../api/common/mail/CommonMailUtils.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { RowButton } from "../../gui/base/buttons/RowButton.js"
 
 export interface MailFolderViewAttrs {

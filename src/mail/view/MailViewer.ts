@@ -1,4 +1,4 @@
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import m, { Children, Component, Vnode } from "mithril"
 import stream from "mithril/stream"
 import { windowFacade, windowSizeListener } from "../../misc/WindowFacade"

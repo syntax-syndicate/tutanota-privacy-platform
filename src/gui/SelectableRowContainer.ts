@@ -2,7 +2,7 @@ import m, { ClassComponent, Vnode } from "mithril"
 import { stateBgActive, stateBgHover } from "./builtinThemes.js"
 import { theme } from "./theme.js"
 import { styles } from "./styles.js"
-import { px, size } from "./size.js"
+import { px, size } from "@tutao/linden"
 import { DefaultAnimationTime } from "./animation/Animations.js"
 
 /** A function that can adjust the style of the selectable row. */

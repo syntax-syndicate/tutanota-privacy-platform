@@ -7,7 +7,7 @@ import { CalendarDay, CalendarMonth } from "../../date/CalendarUtils.js"
 import { DefaultAnimationTime } from "../../../gui/animation/Animations.js"
 import { ExpanderPanel } from "../../../gui/base/Expander.js"
 import { theme } from "../../../gui/theme.js"
-import { px, size } from "../../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { styles } from "../../../gui/styles.js"
 import { hexToRGBAString } from "../../../gui/base/Color.js"
 

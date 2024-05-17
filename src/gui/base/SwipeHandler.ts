@@ -1,4 +1,4 @@
-import { size } from "../size"
+import { size } from "@tutao/linden"
 
 export const enum DirectionLock {
 	Horizontal,

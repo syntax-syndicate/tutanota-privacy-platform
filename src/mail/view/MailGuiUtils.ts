@@ -20,7 +20,7 @@ import { DomRectReadOnlyPolyfilled, Dropdown, DropdownChildAttrs, PosRect } from
 import { modal } from "../../gui/base/Modal.js"
 import { assertSystemFolderOfType, isOfTypeOrSubfolderOf, isSpamOrTrashFolder } from "../../api/common/mail/CommonMailUtils.js"
 import { ConversationViewModel } from "./ConversationViewModel.js"
-import { size } from "../../gui/size.js"
+import { size } from "@tutao/linden"
 import { PinchZoom } from "../../gui/PinchZoom.js"
 
 export async function showDeleteConfirmationDialog(mails: ReadonlyArray<Mail>): Promise<boolean> {

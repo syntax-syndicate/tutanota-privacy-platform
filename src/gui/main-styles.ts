@@ -1,5 +1,5 @@
 import { styles } from "./styles"
-import { px, size } from "./size"
+import { px, size } from "@tutao/linden"
 import { client } from "../misc/ClientDetector"
 import { lang } from "../misc/LanguageViewModel"
 import { noselect, position_absolute, positionValue } from "./mixins"

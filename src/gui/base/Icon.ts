@@ -5,7 +5,7 @@ import { memoized } from "@tutao/tutanota-utils"
 import { assertMainOrNode } from "../../api/common/Env"
 import { BootIcons, BootIconsSvg } from "./icons/BootIcons"
 import { Icons } from "./icons/Icons"
-import { px } from "../size.js"
+import { px } from "@tutao/linden"
 
 assertMainOrNode()
 

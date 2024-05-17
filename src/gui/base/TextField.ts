@@ -1,5 +1,5 @@
 import m, { Children, ClassComponent, CVnode } from "mithril"
-import { px, size } from "../size"
+import { px, size } from "@tutao/linden"
 import { DefaultAnimationTime } from "../animation/Animations"
 import { theme } from "../theme"
 import type { TranslationKey } from "../../misc/LanguageViewModel"

@@ -2,7 +2,7 @@ import m, { Children, Component, Vnode } from "mithril"
 import { AllIcons, Icon } from "./Icon.js"
 import { lang, TranslationText } from "../../misc/LanguageViewModel.js"
 import { ButtonColor, getColors } from "./Button.js"
-import { px } from "../size.js"
+import { px } from "@tutao/linden"
 
 export interface IconSegmentControlItem<T> {
 	icon: AllIcons

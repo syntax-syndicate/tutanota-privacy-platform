@@ -1,7 +1,7 @@
 import m, { Children, Component, Vnode } from "mithril"
 import type { DialogHeaderBarAttrs } from "./DialogHeaderBar"
 import { DialogHeaderBar } from "./DialogHeaderBar"
-import { px } from "../size"
+import { px } from "@tutao/linden"
 import type { MaybeLazy } from "@tutao/tutanota-utils"
 import { resolveMaybeLazy } from "@tutao/tutanota-utils"
 import Stream from "mithril/stream"

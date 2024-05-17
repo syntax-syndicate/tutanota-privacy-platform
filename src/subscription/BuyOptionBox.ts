@@ -1,5 +1,5 @@
 import m, { Child, Children, Component, Vnode, VnodeDOM } from "mithril"
-import { px, size } from "../gui/size"
+import { px, size } from "@tutao/linden"
 import type { TranslationKey } from "../misc/LanguageViewModel"
 import { lang } from "../misc/LanguageViewModel"
 import type { lazy } from "@tutao/tutanota-utils"

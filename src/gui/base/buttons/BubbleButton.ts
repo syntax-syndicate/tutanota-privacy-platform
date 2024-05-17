@@ -4,7 +4,7 @@ import { lang, TranslationText } from "../../../misc/LanguageViewModel.js"
 import { AllIcons, Icon } from "../Icon.js"
 import { theme } from "../../theme.js"
 import { styles } from "../../styles.js"
-import { px, size } from "../../size.js"
+import { px, size } from "@tutao/linden"
 
 export interface BubbleButtonAttrs {
 	label: TranslationText

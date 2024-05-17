@@ -12,7 +12,7 @@ import { getEnabledMailAddressesForGroupInfo } from "../api/common/utils/GroupUt
 import { showPasswordGeneratorDialog } from "../misc/passwords/PasswordGeneratorDialog"
 import { theme } from "../gui/theme"
 import { Icons } from "../gui/base/icons/Icons"
-import { px, size } from "../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { UsageTest, UsageTestController } from "@tutao/tutanota-usagetests"
 import Stream from "mithril/stream"
 import { ButtonSize } from "../gui/base/ButtonSize.js"

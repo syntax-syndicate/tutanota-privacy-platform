@@ -9,7 +9,7 @@ import { Icons } from "./icons/Icons"
 import { assertMainOrNode } from "../../api/common/Env"
 import { IconButton, IconButtonAttrs } from "./IconButton.js"
 import { ButtonSize } from "./ButtonSize.js"
-import { px, size } from "../size.js"
+import { px, size } from "@tutao/linden"
 import { ClickHandler } from "@tutao/linden"
 
 assertMainOrNode()

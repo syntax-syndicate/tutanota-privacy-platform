@@ -1,7 +1,7 @@
 import m, { Children, ClassComponent, Component, Vnode } from "mithril"
 import type { TranslationKey } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
-import { inputLineHeight, px } from "../../gui/size"
+import { inputLineHeight, px } from "@tutao/linden"
 import { keyboardEventToKeyPress, keyHandler } from "../../misc/KeyManager"
 import { theme } from "../../gui/theme"
 import type { lazy } from "@tutao/tutanota-utils"

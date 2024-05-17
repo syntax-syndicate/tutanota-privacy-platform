@@ -1,6 +1,6 @@
 import m, { Children } from "mithril"
 import { NotFoundError } from "../api/common/error/RestError.js"
-import { size } from "../gui/size.js"
+import { size } from "@tutao/linden"
 import type { GroupInfo, User } from "../api/entities/sys/TypeRefs.js"
 import { GroupInfoTypeRef, GroupMemberTypeRef } from "../api/entities/sys/TypeRefs.js"
 import { contains, LazyLoaded, memoized, noOp } from "@tutao/tutanota-utils"

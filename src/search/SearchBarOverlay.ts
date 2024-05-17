@@ -1,5 +1,5 @@
 import type { Entry, SearchBarState, ShowMoreAction } from "./SearchBar"
-import { px, size } from "../gui/size"
+import { px, size } from "@tutao/linden"
 import { lang } from "../misc/LanguageViewModel"
 import { Button, ButtonType } from "../gui/base/Button.js"
 import { Icons } from "../gui/base/icons/Icons"

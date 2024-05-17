@@ -1,6 +1,6 @@
 import { pureComponent } from "./base/PureComponent.js"
 import m, { Children } from "mithril"
-import { px, size } from "./size.js"
+import { px, size } from "@tutao/linden"
 
 export interface BaseMobileHeaderAttrs {
 	left?: Children

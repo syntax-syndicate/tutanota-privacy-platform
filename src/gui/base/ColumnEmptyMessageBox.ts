@@ -3,7 +3,7 @@ import type { TranslationKey } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
 import type { AllIcons } from "./Icon"
 import { Icon } from "./Icon"
-import { px, size } from "../size"
+import { px, size } from "@tutao/linden"
 import type { lazy } from "@tutao/tutanota-utils"
 import { assertMainOrNode } from "../../api/common/Env"
 

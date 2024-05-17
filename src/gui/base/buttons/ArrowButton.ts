@@ -1,7 +1,7 @@
 import m, { Children } from "mithril"
 import { Icons } from "../icons/Icons.js"
 import { BootIcons } from "../icons/BootIcons.js"
-import { px } from "../../size.js"
+import { px } from "@tutao/linden"
 import { BaseButton, ClickHandler } from "@tutao/linden"
 import { lang } from "../../../misc/LanguageViewModel.js"
 import { Icon } from "../Icon.js"

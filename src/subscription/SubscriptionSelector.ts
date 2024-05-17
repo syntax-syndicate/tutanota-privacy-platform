@@ -19,7 +19,7 @@ import { ProgrammingError } from "../api/common/error/ProgrammingError"
 import { Button, ButtonType } from "../gui/base/Button.js"
 import { downcast, lazy } from "@tutao/tutanota-utils"
 import { AvailablePlanType, HighlightedPlans, LegacyPlans, NewBusinessPlans, NewPersonalPlans, PlanType } from "../api/common/TutanotaConstants.js"
-import { px } from "../gui/size.js"
+import { px } from "@tutao/linden"
 import { LoginButton, LoginButtonAttrs } from "../gui/base/buttons/LoginButton.js"
 
 const BusinessUseItems: SegmentControlItem<boolean>[] = [

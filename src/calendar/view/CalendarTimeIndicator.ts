@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 
 export type CalendarTimeIndicatorAttrs = {
 	/** Make the circle tangent to the left side of the line rather than intersecting it */

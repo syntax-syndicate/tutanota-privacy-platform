@@ -11,7 +11,7 @@ import { ExpanderButton, ExpanderPanel } from "../../gui/base/Expander"
 import { CustomColorEditorPreview } from "./CustomColorEditorPreview"
 import { downcast } from "@tutao/tutanota-utils"
 import { expandHexTriplet } from "../../gui/base/Color"
-import { px } from "../../gui/size"
+import { px } from "@tutao/linden"
 import { BaseThemeId } from "../../gui/theme"
 
 export type SimpleCustomColorEditorAttrs = {

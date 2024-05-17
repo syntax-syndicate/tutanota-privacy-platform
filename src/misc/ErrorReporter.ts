@@ -11,7 +11,7 @@ import { downcast, ErrorInfo, errorToString, neverNull, typedKeys, uint8ArrayToS
 import { locator } from "../api/main/MainLocator"
 import { AccountType, ConversationType, Keys, MailMethod } from "../api/common/TutanotaConstants"
 import { copyToClipboard } from "./ClipboardUtils"
-import { px } from "../gui/size"
+import { px } from "@tutao/linden"
 import { isApp, isDesktop, Mode } from "../api/common/Env"
 import { RecipientType } from "../api/common/recipients/Recipient.js"
 import { createLogFile } from "../api/common/Logger.js"

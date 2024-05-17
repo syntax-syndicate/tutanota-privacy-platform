@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { px } from "../size"
+import { px } from "@tutao/linden"
 
 export type SegmentControlItem<T> = {
 	name: string

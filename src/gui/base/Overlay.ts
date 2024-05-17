@@ -2,7 +2,7 @@ import m, { Children, Component, VnodeDOM } from "mithril"
 import { LayerType } from "../../RootView"
 import { lazy, makeSingleUse } from "@tutao/tutanota-utils"
 import { assertMainOrNodeBoot } from "../../api/common/Env"
-import { px, size } from "../size.js"
+import { px, size } from "@tutao/linden"
 import { styles } from "../styles.js"
 import { getSafeAreaInsetBottom } from "../HtmlUtils.js"
 

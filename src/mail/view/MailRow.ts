@@ -17,7 +17,7 @@ import {
 	setVisibility,
 	shouldAlwaysShowMultiselectCheckbox,
 } from "../../gui/SelectableRowContainer.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { NBSP, noOp } from "@tutao/tutanota-utils"
 import { VirtualRow } from "../../gui/base/ListUtils.js"
 import { companyTeamLabel } from "../../misc/ClientConstants.js"

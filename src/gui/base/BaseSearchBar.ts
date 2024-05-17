@@ -1,6 +1,6 @@
 import m, { Children, ClassComponent, Vnode } from "mithril"
 import { AriaLandmarks, BaseButton, BaseButtonAttrs, landmarkAttrs, TabIndex } from "@tutao/linden"
-import { inputLineHeight, px, size } from "../size.js"
+import { inputLineHeight, px, size } from "@tutao/linden"
 import { styles } from "../styles.js"
 import { BootIcons } from "./icons/BootIcons.js"
 import { DefaultAnimationTime } from "../animation/Animations.js"

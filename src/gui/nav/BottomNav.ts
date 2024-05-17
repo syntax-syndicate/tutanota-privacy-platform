@@ -1,6 +1,6 @@
 import m, { Children, Component, Vnode } from "mithril"
 import { NavButton } from "../base/NavButton.js"
-import { size } from "../size"
+import { size } from "@tutao/linden"
 import { CALENDAR_PREFIX, CONTACTS_PREFIX, MAIL_PREFIX, SEARCH_PREFIX } from "../../misc/RouteChange"
 import { FeatureType } from "../../api/common/TutanotaConstants"
 import { BootIcons } from "../base/icons/BootIcons"

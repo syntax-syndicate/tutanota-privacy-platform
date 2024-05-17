@@ -1,5 +1,5 @@
 import m from "mithril"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { displayOverlay } from "../../gui/base/Overlay"
 import { DefaultAnimationTime } from "../../gui/animation/Animations"
 import { EventController } from "../../api/main/EventController"

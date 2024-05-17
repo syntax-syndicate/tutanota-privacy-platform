@@ -9,7 +9,7 @@ import { NavButton } from "./NavButton.js"
 import type { lazy } from "@tutao/tutanota-utils"
 import { isNotNull } from "@tutao/tutanota-utils"
 import { Icons } from "./icons/Icons.js"
-import { px, size } from "../size.js"
+import { px, size } from "@tutao/linden"
 
 const WARNING_RED = "#ca0606"
 

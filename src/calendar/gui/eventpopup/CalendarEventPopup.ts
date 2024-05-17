@@ -1,6 +1,6 @@
 import type { Shortcut } from "../../../misc/KeyManager.js"
 import m, { Children } from "mithril"
-import { px } from "../../../gui/size.js"
+import { px } from "@tutao/linden"
 import { Button, ButtonColor, ButtonType } from "../../../gui/base/Button.js"
 import { Icons } from "../../../gui/base/icons/Icons.js"
 import type { ModalComponent } from "../../../gui/base/Modal.js"

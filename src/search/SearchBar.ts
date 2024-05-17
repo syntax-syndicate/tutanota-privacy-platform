@@ -1,5 +1,5 @@
 import m, { Component, Vnode } from "mithril"
-import { px, size } from "../gui/size"
+import { px, size } from "@tutao/linden"
 import stream from "mithril/stream"
 import Stream from "mithril/stream"
 import type { PositionRect } from "../gui/base/Overlay"

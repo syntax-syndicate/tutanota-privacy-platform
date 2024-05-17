@@ -1,6 +1,6 @@
 import m, { Children, Component, RouteLinkAttrs, Vnode } from "mithril"
 import { handleUncaughtError } from "../../misc/ErrorHandler"
-import { px, size } from "../size"
+import { px, size } from "@tutao/linden"
 import type { lazy } from "@tutao/tutanota-utils"
 import { lazyStringValue, neverNull } from "@tutao/tutanota-utils"
 import type { lazyIcon } from "./Icon"

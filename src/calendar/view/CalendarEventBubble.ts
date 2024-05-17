@@ -1,5 +1,5 @@
 import m, { Child, Children, Component, Vnode } from "mithril"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { Icon } from "../../gui/base/Icon"
 import { Icons } from "../../gui/base/icons/Icons"
 import { colorForBg } from "../gui/CalendarGuiUtils.js"

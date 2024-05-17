@@ -17,7 +17,7 @@ import {
 } from "../date/CalendarUtils"
 import { CalendarDayEventsView, calendarDayTimes } from "./CalendarDayEventsView"
 import { theme } from "../../gui/theme"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { EventTextTimeOption, WeekStart } from "../../api/common/TutanotaConstants"
 import { lang } from "../../misc/LanguageViewModel"
 import { PageView } from "../../gui/base/PageView"

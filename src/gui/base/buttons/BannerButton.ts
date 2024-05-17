@@ -1,7 +1,7 @@
 import { lang, TranslationKey } from "../../../misc/LanguageViewModel.js"
 import { lazy } from "@tutao/tutanota-utils"
 import m, { Children, Component, Vnode } from "mithril"
-import { px, size } from "../../size.js"
+import { px, size } from "@tutao/linden"
 import { BaseButton, ClickHandler } from "@tutao/linden"
 import { theme } from "../../theme.js"
 

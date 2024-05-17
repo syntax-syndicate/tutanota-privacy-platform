@@ -22,7 +22,7 @@ import { formatPrice, PaymentInterval, PriceAndConfigProvider } from "../PriceUt
 import { GiftCardService } from "../../api/entities/sys/Services"
 import { UpgradePriceType } from "../FeatureListProvider"
 import { TranslationKeyType } from "../../misc/TranslationKey.js"
-import { px } from "../../gui/size"
+import { px } from "@tutao/linden"
 import { Icon } from "../../gui/base/Icon"
 import { Icons } from "../../gui/base/icons/Icons"
 import { LoginButton } from "../../gui/base/buttons/LoginButton.js"

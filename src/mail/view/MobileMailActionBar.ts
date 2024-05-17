@@ -9,7 +9,7 @@ import { promptAndDeleteMails, showMoveMailsDropdown } from "./MailGuiUtils.js"
 import { noOp, ofClass } from "@tutao/tutanota-utils"
 import { modal } from "../../gui/base/Modal.js"
 import { editDraft, mailViewerMoreActions } from "./MailViewerUtils.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 
 export interface MobileMailActionBarAttrs {
 	viewModel: MailViewerViewModel

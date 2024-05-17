@@ -1,6 +1,6 @@
 import m, { Children, ClassComponent, Vnode, VnodeDOM } from "mithril"
 import { debounce, memoized, numberRange } from "@tutao/tutanota-utils"
-import { px, size } from "../size.js"
+import { px, size } from "@tutao/linden"
 import { isKeyPressed } from "../../misc/KeyManager.js"
 import { Keys } from "../../api/common/TutanotaConstants.js"
 import { client } from "../../misc/ClientDetector.js"

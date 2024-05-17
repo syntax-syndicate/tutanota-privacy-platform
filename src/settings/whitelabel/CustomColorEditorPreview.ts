@@ -1,5 +1,5 @@
 import m, { Children, Component } from "mithril"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { Button, ButtonType } from "../../gui/base/Button.js"
 import { createMail, createMailAddress, Mail } from "../../api/entities/tutanota/TypeRefs.js"
 import { MailRow } from "../../mail/view/MailRow"

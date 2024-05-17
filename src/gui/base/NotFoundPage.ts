@@ -1,5 +1,5 @@
 import m, { Children, Component } from "mithril"
-import { px } from "../size"
+import { px } from "@tutao/linden"
 import { AriaLandmarks, landmarkAttrs } from "@tutao/linden"
 import { assertMainOrNode } from "../../api/common/Env"
 import { lang } from "../../misc/LanguageViewModel.js"

@@ -4,7 +4,7 @@ import type { KnowledgeBaseEntry, TemplateGroupRoot } from "../api/entities/tuta
 import { KnowledgeBaseEntryTypeRef } from "../api/entities/tutanota/TypeRefs.js"
 import { lang } from "../misc/LanguageViewModel"
 
-import { size } from "../gui/size"
+import { size } from "@tutao/linden"
 import { EntityClient } from "../api/common/EntityClient"
 import { GENERATED_MAX_ID, isSameId, listIdPart } from "../api/common/utils/EntityUtils"
 import { hasCapabilityOnGroup } from "../sharing/GroupUtils"

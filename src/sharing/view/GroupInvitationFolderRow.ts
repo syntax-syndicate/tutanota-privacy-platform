@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { size } from "../../gui/size"
+import { size } from "@tutao/linden"
 import { getCapabilityText } from "../GroupUtils"
 import { downcast } from "@tutao/tutanota-utils"
 import { getMailAddressDisplayText } from "../../mail/model/MailUtils"

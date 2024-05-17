@@ -1,6 +1,6 @@
 import m, { Children, ClassComponent, Vnode } from "mithril"
 import type { Contact } from "../../api/entities/tutanota/TypeRefs.js"
-import { size } from "../../gui/size"
+import { size } from "@tutao/linden"
 import { ListColumnWrapper } from "../../gui/ListColumnWrapper"
 import { assertMainOrNode } from "../../api/common/Env"
 import { List, ListAttrs, MultiselectMode, RenderConfig, ViewHolder } from "../../gui/base/List.js"

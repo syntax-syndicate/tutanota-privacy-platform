@@ -1,5 +1,5 @@
 import m, { Children, ClassComponent, Component, Vnode, VnodeDOM } from "mithril"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { EventTextTimeOption, WeekStart } from "../../api/common/TutanotaConstants"
 import type { CalendarDay, CalendarMonth } from "../date/CalendarUtils"
 import {

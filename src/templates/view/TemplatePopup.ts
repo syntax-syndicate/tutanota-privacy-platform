@@ -1,7 +1,7 @@
 import m, { Children } from "mithril"
 import type { ModalComponent } from "../../gui/base/Modal"
 import { modal } from "../../gui/base/Modal"
-import { px } from "../../gui/size"
+import { px } from "@tutao/linden"
 import type { Shortcut } from "../../misc/KeyManager"
 import { isKeyPressed } from "../../misc/KeyManager"
 import stream from "mithril/stream"

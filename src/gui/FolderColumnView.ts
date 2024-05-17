@@ -5,7 +5,7 @@ import type { TranslationKey } from "../misc/LanguageViewModel.js"
 import { lang } from "../misc/LanguageViewModel.js"
 import { AriaLandmarks, BaseButton, BaseButtonAttrs, ClickHandler, landmarkAttrs } from "@tutao/linden"
 import type { lazy } from "@tutao/tutanota-utils"
-import { px, size } from "./size.js"
+import { px, size } from "@tutao/linden"
 
 export type Attrs = {
 	/** Button to be displayed on top of the column*/

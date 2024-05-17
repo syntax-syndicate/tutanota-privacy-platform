@@ -18,7 +18,7 @@ import {
 	SelectableRowSelectedSetter,
 	shouldAlwaysShowMultiselectCheckbox,
 } from "../../gui/SelectableRowContainer.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { shiftByForCheckbox, translateXHide, translateXShow } from "./ContactRow.js"
 import { styles } from "../../gui/styles.js"
 

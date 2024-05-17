@@ -7,7 +7,7 @@ import { alpha, AlphaEnum, AnimationPromise, animations, DefaultAnimationTime, o
 import { getElevatedBackground, theme } from "../../gui/theme.js"
 import { INPUT } from "../../gui/base/Dialog.js"
 import { ease } from "../../gui/animation/Easing.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { styles } from "../../gui/styles.js"
 import { LoginButton } from "../../gui/base/buttons/LoginButton.js"
 

@@ -2,7 +2,7 @@ import m, { Children, Component, Vnode } from "mithril"
 import type { TranslationKey } from "../../misc/LanguageViewModel"
 import { lang } from "../../misc/LanguageViewModel"
 import { theme } from "../theme"
-import { inputLineHeight, px, size } from "../size"
+import { inputLineHeight, px, size } from "@tutao/linden"
 import type { lazy } from "@tutao/tutanota-utils"
 
 export type TextDisplayAreaAttrs = {

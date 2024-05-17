@@ -1,7 +1,7 @@
 import { CalendarNavConfiguration, CalendarViewType, getIconForViewType } from "../gui/CalendarGuiUtils.js"
 import m, { Children, Component, Vnode } from "mithril"
 import { theme } from "../../gui/theme.js"
-import { px, size } from "../../gui/size.js"
+import { px, size } from "@tutao/linden"
 import { lang, TranslationText } from "../../misc/LanguageViewModel.js"
 import { IconSegmentControl } from "../../gui/base/IconSegmentControl.js"
 import { AllIcons } from "../../gui/base/Icon.js"

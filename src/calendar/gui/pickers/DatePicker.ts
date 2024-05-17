@@ -3,7 +3,7 @@ import { client } from "../../../misc/ClientDetector.js"
 import { formatDate, formatDateWithWeekdayAndYear, formatMonthWithFullYear } from "../../../misc/Formatter.js"
 import type { TranslationText } from "../../../misc/LanguageViewModel.js"
 import { lang } from "../../../misc/LanguageViewModel.js"
-import { px } from "../../../gui/size.js"
+import { px } from "@tutao/linden"
 import { theme } from "../../../gui/theme.js"
 
 import { getStartOfDay, isSameDayOfDate } from "@tutao/tutanota-utils"

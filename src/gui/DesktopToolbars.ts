@@ -1,6 +1,6 @@
 import { pureComponent } from "./base/PureComponent.js"
 import m from "mithril"
-import { px, size } from "./size.js"
+import { px, size } from "@tutao/linden"
 import { responsiveCardHMargin } from "./cards.js"
 
 /** Toolbar layout that is used in the second/list column. */

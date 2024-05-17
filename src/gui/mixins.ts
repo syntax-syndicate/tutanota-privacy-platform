@@ -1,4 +1,4 @@
-import { px } from "./size"
+import { px } from "@tutao/linden"
 import { assertMainOrNodeBoot } from "../api/common/Env"
 
 assertMainOrNodeBoot()

@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { px, size } from "../../gui/size"
+import { px, size } from "@tutao/linden"
 import { Keys } from "../../api/common/TutanotaConstants"
 import { TemplatePopupModel } from "../model/TemplatePopupModel"
 import { isKeyPressed } from "../../misc/KeyManager"

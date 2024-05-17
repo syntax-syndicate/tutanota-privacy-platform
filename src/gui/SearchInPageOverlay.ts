@@ -1,7 +1,7 @@
 import m, { Children, Component } from "mithril"
 import type { PositionRect } from "./base/Overlay"
 import { displayOverlay } from "./base/Overlay"
-import { px, size } from "./size"
+import { px, size } from "@tutao/linden"
 import { Icons } from "./base/icons/Icons"
 import { assertMainOrNode } from "../api/common/Env"
 import { lang } from "../misc/LanguageViewModel"

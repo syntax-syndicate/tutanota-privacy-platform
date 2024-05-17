@@ -1,5 +1,5 @@
 import m, { Children, Component, Vnode } from "mithril"
-import { px } from "../../gui/size"
+import { px } from "@tutao/linden"
 import type { EmailTemplate } from "../../api/entities/tutanota/TypeRefs.js"
 import { TEMPLATE_SHORTCUT_PREFIX } from "../model/TemplatePopupModel"
 import { TEMPLATE_LIST_ENTRY_HEIGHT } from "./TemplateConstants.js"
