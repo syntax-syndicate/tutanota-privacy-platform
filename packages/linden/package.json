@@ -1,0 +1,44 @@
+{
+	"name": "@tutao/linden",
+	"version": "1.0.0",
+	"description": "A mithril based UI component library",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"scripts": {
+		"prepublishOnly": "npm run build",
+		"build": "tsc -b"
+	},
+	"type": "module",
+	"files": [
+		"dist/*",
+		"README.md",
+		"LICENSE.txt",
+		"tsconfig.json"
+	],
+	"dependencies": {
+		"mithril": "2.2.2"
+	},
+	"devDependencies": {
+		"@types/mithril": "2.0.11",
+		"typescript": "5.3.3"
+	},
+	"keywords": [
+		"mithril",
+		"component",
+		"components",
+		"component framework",
+		"ui-library",
+		"uikit"
+	],
+	"author": "Tutao GmbH <hello@tutao.de>",
+	"license": " GPL-3.0-only",
+	"bugs": {
+		"url": "https://github.com/tutao/tutanota/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git@github.com:tutao/tutanota.git",
+		"directory": "packages/linden"
+	},
+	"funding": "https://tuta.com/community"
+}
