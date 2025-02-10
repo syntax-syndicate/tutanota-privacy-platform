@@ -7,15 +7,11 @@ import { PublicKeyIdentifierType } from "../../common/TutanotaConstants.js"
 import { KeyVersion } from "@tutao/tutanota-utils/dist/Utils.js"
 import { InvalidDataError } from "../../common/error/RestError.js"
 import { CryptoError } from "@tutao/tutanota-crypto/error.js"
+import { AsymmetricPublicKey } from "../../../../../packages/tutanota-crypto/lib/index.js"
 
 export type PublicKeyIdentifier = {
 	identifier: string
 	identifierType: PublicKeyIdentifierType
-}
-export type PublicKeys = {
-	pubRsaKey: null | Uint8Array
-	pubEccKey: null | Uint8Array
-	pubKyberKey: null | Uint8Array
 }
 
 /**
@@ -25,15 +21,15 @@ export type PublicKeys = {
 export class PublicKeyProvider {
 	constructor(private readonly serviceExecutor: IServiceExecutor) {}
 
-	async loadCurrentPubKey(pubKeyIdentifier: PublicKeyIdentifier): Promise<Versioned<PublicKeys>> {
+	async loadCurrentPubKey(pubKeyIdentifier: PublicKeyIdentifier): Promise<Versioned<AsymmetricPublicKey>> {
 		return this.loadPubKey(pubKeyIdentifier, null)
 	}
 
-	async loadVersionedPubKey(pubKeyIdentifier: PublicKeyIdentifier, version: KeyVersion): Promise<PublicKeys> {
-		return (await this.loadPubKey(pubKeyIdentifier, version)).object
+	async loadVersionedPubKey(pubKeyIdentifier: PublicKeyIdentifier, version: KeyVersion): Promise<Versioned<AsymmetricPublicKey>> {
+		return await this.loadPubKey(pubKeyIdentifier, version)
 	}
 
-	private async loadPubKey(pubKeyIdentifier: PublicKeyIdentifier, version: KeyVersion | null): Promise<Versioned<PublicKeys>> {
+	private async loadPubKey(pubKeyIdentifier: PublicKeyIdentifier, version: KeyVersion | null): Promise<Versioned<AsymmetricPublicKey>> {
 		const requestData = createPublicKeyGetIn({
 			version: version ? String(version) : null,
 			identifier: pubKeyIdentifier.identifier,
@@ -59,7 +55,7 @@ export class PublicKeyProvider {
 		}
 	}
 
-	private convertToVersionedPublicKeys(publicKeyGetOut: PublicKeyGetOut): Versioned<PublicKeys> {
+	private convertToVersionedPublicKeys(publicKeyGetOut: PublicKeyGetOut): Versioned<AsymmetricPublicKey> {
 		return {
 			object: {
 				pubRsaKey: publicKeyGetOut.pubRsaKey,

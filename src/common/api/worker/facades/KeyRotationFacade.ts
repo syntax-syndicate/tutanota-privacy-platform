@@ -61,7 +61,6 @@ import {
 	KeyVersion,
 	lazyAsync,
 	promiseMap,
-	Versioned,
 } from "@tutao/tutanota-utils"
 import { elementIdPart, getElementId, isSameId, listIdPart } from "../../common/utils/EntityUtils.js"
 import { checkKeyVersionConstraints, KeyLoaderFacade, parseKeyVersion } from "./KeyLoaderFacade.js"
@@ -103,7 +102,8 @@ import { LockedError } from "../../common/error/RestError.js"
 import { AsymmetricCryptoFacade } from "../crypto/AsymmetricCryptoFacade.js"
 import { TutanotaError } from "@tutao/tutanota-error"
 import { asPQPublicKeys, brandKeyMac, KeyAuthenticationFacade } from "./KeyAuthenticationFacade.js"
-import { PublicKeyProvider, PublicKeys } from "./PublicKeyProvider.js"
+import { PublicKeyConverter } from "../crypto/PublicKeyConverter"
+import { PublicKeyProvider } from "./PublicKeyProvider.js"
 
 assertWorkerOrNode()
 
@@ -183,6 +183,7 @@ export class KeyRotationFacade {
 		private readonly asymmetricCryptoFacade: AsymmetricCryptoFacade,
 		private readonly keyAuthenticationFacade: KeyAuthenticationFacade,
 		private readonly publicKeyProvider: PublicKeyProvider,
+		private readonly publicKeyConverter: PublicKeyConverter,
 	) {
 		this.pendingKeyRotations = {
 			pwKey: null,

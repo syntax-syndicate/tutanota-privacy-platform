@@ -45,10 +45,12 @@ import {
 	createAuthVerifier,
 	EncryptedPqKeyPairs,
 	KEY_LENGTH_BYTES_AES_256,
+	KeyPairType,
 	KyberPrivateKey,
 	KyberPublicKey,
 	MacTag,
 	PQKeyPairs,
+	PQPublicKeys,
 	uint8ArrayToBitArray,
 } from "@tutao/tutanota-crypto"
 import { checkKeyVersionConstraints, KeyLoaderFacade, parseKeyVersion } from "../../../../../src/common/api/worker/facades/KeyLoaderFacade.js"
@@ -69,7 +71,7 @@ import {
 	UserGroupKeyRotationService,
 } from "../../../../../src/common/api/entities/sys/Services.js"
 import { CryptoFacade } from "../../../../../src/common/api/worker/crypto/CryptoFacade.js"
-import { assertNotNull, concat, findAllAndRemove, lazyAsync, lazyMemoized } from "@tutao/tutanota-utils"
+import { assertNotNull, concat, findAllAndRemove, lazyAsync, lazyMemoized, Versioned } from "@tutao/tutanota-utils"
 import type { CryptoWrapper, VersionedEncryptedKey, VersionedKey } from "../../../../../src/common/api/worker/crypto/CryptoWrapper.js"
 import { RecoverCodeFacade, RecoverData } from "../../../../../src/common/api/worker/facades/lazy/RecoverCodeFacade.js"
 import { UserFacade } from "../../../../../src/common/api/worker/facades/UserFacade.js"
@@ -79,7 +81,8 @@ import { GroupInvitationPostData, InternalRecipientKeyDataTypeRef } from "../../
 import { RecipientsNotFoundError } from "../../../../../src/common/api/common/error/RecipientsNotFoundError.js"
 import { assertThrows, mockAttribute, spy } from "@tutao/tutanota-test-utils"
 import { LockedError } from "../../../../../src/common/api/common/error/RestError.js"
-import { AsymmetricCryptoFacade, PubEncSymKey } from "../../../../../src/common/api/worker/crypto/AsymmetricCryptoFacade.js"
+import { AsymmetricCryptoFacade, convertToVersionedPublicKeys, PubEncSymKey } from "../../../../../src/common/api/worker/crypto/AsymmetricCryptoFacade.js"
+import { PublicKeyConverter } from "../../../../../src/common/api/worker/crypto/PublicKeyConverter"
 import { CryptoError } from "@tutao/tutanota-crypto/error.js"
 import { TutanotaError } from "@tutao/tutanota-error"
 import {
@@ -428,6 +431,7 @@ o.spec("KeyRotationFacadeTest", function () {
 	let groupInfo: GroupInfo
 	let groupKeyVersion0: AesKey
 	let customer: Customer
+	let publicKeyConverter: PublicKeyConverter
 
 	o.beforeEach(async () => {
 		entityClientMock = instance(EntityClient)
@@ -445,6 +449,7 @@ o.spec("KeyRotationFacadeTest", function () {
 		asymmetricCryptoFacade = object()
 		keyAuthenticationFacade = object()
 		publicKeyProvider = object()
+		publicKeyConverter = object()
 		keyRotationFacade = new KeyRotationFacade(
 			entityClientMock,
 			keyLoaderFacadeMock,
@@ -459,6 +464,7 @@ o.spec("KeyRotationFacadeTest", function () {
 			asymmetricCryptoFacade,
 			keyAuthenticationFacade,
 			publicKeyProvider,
+			publicKeyConverter,
 		)
 		user = await makeUser(userId, { key: userEncAdminKey, encryptingKeyVersion: 0 })
 		const customerId = "customerId"
@@ -1439,6 +1445,37 @@ o.spec("KeyRotationFacadeTest", function () {
 				}))
 				when(cryptoWrapperMock.encryptKey(DISTRIBUTION_KEY, NEW_USER_GROUP_KEY.object)).thenReturn(DISTRIBUTION_KEY_ENC_NEW_USER_GROUP_KEY)
 				generatedKeyPairs = mockGenerateKeyPairs(pqFacadeMock, cryptoWrapperMock, NEW_USER_GROUP_KEY.object)
+				const newUserPqKeyPair = generatedKeyPairs.get(NEW_USER_GROUP_KEY.object)!.newKeyPairs
+				const latestAdminKeyVersion = 1
+				const publicKeyGetOut = createPublicKeyGetOut({
+					pubKeyVersion: latestAdminKeyVersion.toString(),
+					pubRsaKey: null,
+					pubEccKey: object(),
+					pubKyberKey: object(),
+				})
+				const adminPubKeys: Versioned<PQPublicKeys> = object()
+				adminPubKeys.version = latestAdminKeyVersion
+				adminPubKeys.object.keyPairType = KeyPairType.TUTA_CRYPT
+
+				when(
+					serviceExecutorMock.get(
+						PublicKeyService,
+						matchers.argThat((arg: PublicKeyGetIn) => {
+							return arg.version == null && arg.identifierType === PublicKeyIdentifierType.GROUP_ID && arg.identifier === adminGroupId
+						}),
+					),
+				).thenResolve(publicKeyGetOut)
+				when(
+					asymmetricCryptoFacade.tutaCryptEncryptSymKey(NEW_USER_GROUP_KEY.object, adminPubKeys, {
+						version: NEW_USER_GROUP_KEY.version,
+						object: newUserPqKeyPair.eccKeyPair,
+					}),
+				).thenResolve({
+					pubEncSymKeyBytes: object(),
+					senderKeyVersion: NEW_USER_GROUP_KEY.version,
+					recipientKeyVersion: latestAdminKeyVersion,
+					cryptoProtocolVersion: CryptoProtocolVersion.TUTA_CRYPT,
+				})
 			})
 
 			o("Successful user group key rotation", async function () {
