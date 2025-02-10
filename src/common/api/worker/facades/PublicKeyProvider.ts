@@ -1,13 +1,13 @@
-import { createPublicKeyGetIn, PublicKeyGetOut } from "../../entities/sys/TypeRefs.js"
+import { createPublicKeyGetIn } from "../../entities/sys/TypeRefs.js"
 import { IServiceExecutor } from "../../common/ServiceRequest.js"
 import { PublicKeyService } from "../../entities/sys/Services.js"
-import { parseKeyVersion } from "./KeyLoaderFacade.js"
 import { Versioned } from "@tutao/tutanota-utils"
 import { PublicKeyIdentifierType } from "../../common/TutanotaConstants.js"
 import { KeyVersion } from "@tutao/tutanota-utils/dist/Utils.js"
 import { InvalidDataError } from "../../common/error/RestError.js"
 import { CryptoError } from "@tutao/tutanota-crypto/error.js"
-import { AsymmetricPublicKey } from "../../../../../packages/tutanota-crypto/lib/index.js"
+import { PublicKeyConverter } from "../crypto/PublicKeyConverter"
+import { AsymmetricPublicKey, isVersionedRsaOrRsaEccPublicKey } from "@tutao/tutanota-crypto"
 
 export type PublicKeyIdentifier = {
 	identifier: string
@@ -26,6 +26,7 @@ export class PublicKeyProvider {
 	}
 
 	async loadVersionedPubKey(pubKeyIdentifier: PublicKeyIdentifier, version: KeyVersion): Promise<Versioned<AsymmetricPublicKey>> {
+		// TODO: Do we want to keep this method at all?
 		return await this.loadPubKey(pubKeyIdentifier, version)
 	}
 
@@ -36,12 +37,15 @@ export class PublicKeyProvider {
 			identifierType: pubKeyIdentifier.identifierType,
 		})
 		const publicKeyGetOut = await this.serviceExecutor.get(PublicKeyService, requestData)
-		const pubKeys = this.convertToVersionedPublicKeys(publicKeyGetOut)
-		this.enforceRsaKeyVersionConstraint(pubKeys)
-		if (version != null && pubKeys.version !== version) {
+
+		// TODO: Merge PublicKeyProvider with PublicKeyConverter
+		const publicKey = new PublicKeyConverter().convertFromPublicKeyGetOut(publicKeyGetOut)
+
+		this.enforceRsaKeyVersionConstraint(publicKey)
+		if (version != null && publicKey.version !== version) {
 			throw new InvalidDataError("the server returned a key version that was not requested")
 		}
-		return pubKeys
+		return publicKey
 	}
 
 	/**
@@ -49,20 +53,10 @@ export class PublicKeyProvider {
 	 *
 	 * Receiving a higher version would indicate a protocol downgrade/ MITM attack, and we reject such keys.
 	 */
-	private enforceRsaKeyVersionConstraint(pubKeys: Versioned<PublicKeys>) {
-		if (pubKeys.version !== 0 && pubKeys.object.pubRsaKey != null) {
+	private enforceRsaKeyVersionConstraint(publicKey: Versioned<AsymmetricPublicKey>) {
+		// TODO: Is this the right function or do we want isVersionedRsaKeyPair()?
+		if (isVersionedRsaOrRsaEccPublicKey(publicKey) && publicKey.version !== 0) {
 			throw new CryptoError("rsa key in a version that is not 0")
-		}
-	}
-
-	private convertToVersionedPublicKeys(publicKeyGetOut: PublicKeyGetOut): Versioned<AsymmetricPublicKey> {
-		return {
-			object: {
-				pubRsaKey: publicKeyGetOut.pubRsaKey,
-				pubKyberKey: publicKeyGetOut.pubKyberKey,
-				pubEccKey: publicKeyGetOut.pubEccKey,
-			},
-			version: parseKeyVersion(publicKeyGetOut.pubKeyVersion),
 		}
 	}
 }

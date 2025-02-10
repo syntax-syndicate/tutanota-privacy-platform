@@ -312,10 +312,10 @@ export async function initLocator(worker: WorkerImpl, browserData: BrowserData) 
 		cache,
 		locator.keyLoader,
 		locator.asymmetricCrypto,
-		locator.publicKeyProvider,
-		locator.keyVerification,
-		lazyMemoized(() => locator.keyRotation),
 		locator.publicKeyConverter,
+		locator.keyVerification,
+		locator.publicKeyProvider,
+		lazyMemoized(() => locator.keyRotation),
 	)
 
 	locator.recoverCode = lazyMemoized(async () => {
@@ -358,8 +358,8 @@ export async function initLocator(worker: WorkerImpl, browserData: BrowserData) 
 		locator.share,
 		locator.groupManagement,
 		locator.asymmetricCrypto,
-		locator.publicKeyProvider,
 		keyAuthenticationFacade,
+		locator.publicKeyProvider,
 		locator.publicKeyConverter,
 	)
 

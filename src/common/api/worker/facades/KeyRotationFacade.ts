@@ -61,12 +61,14 @@ import {
 	KeyVersion,
 	lazyAsync,
 	promiseMap,
+	Versioned,
 } from "@tutao/tutanota-utils"
 import { elementIdPart, getElementId, isSameId, listIdPart } from "../../common/utils/EntityUtils.js"
 import { checkKeyVersionConstraints, KeyLoaderFacade, parseKeyVersion } from "./KeyLoaderFacade.js"
 import {
 	Aes256Key,
 	AesKey,
+	AsymmetricPublicKey,
 	bitArrayToUint8Array,
 	createAuthVerifier,
 	EccKeyPair,
@@ -74,7 +76,6 @@ import {
 	getKeyLengthBytes,
 	isEncryptedPqKeyPairs,
 	KEY_LENGTH_BYTES_AES_256,
-	MacTag,
 	PQKeyPairs,
 	PQPublicKeys,
 	uint8ArrayToKey,
@@ -1111,7 +1112,7 @@ export class KeyRotationFacade {
 	private async encryptUserGroupKeyForAdminAsymmetrically(
 		userGroupId: Id,
 		newUserGroupKeys: GeneratedGroupKeys,
-		adminPubKeys: Versioned<PublicKeys>,
+		adminPubKeys: Versioned<AsymmetricPublicKey>,
 		adminGroupId: Id,
 		currentUserGroupKey: VersionedKey,
 	): Promise<PubEncKeyData> {
@@ -1280,14 +1281,8 @@ export class KeyRotationFacade {
 				givenTag,
 			)
 
-			const recipientPublicDistKeys: Versioned<PublicKeys> = {
-				version: 0,
-				object: {
-					pubRsaKey: null,
-					pubEccKey: distributionKey.pubEccKey,
-					pubKyberKey: distributionKey.pubKyberKey,
-				},
-			}
+			// TODO: Merge PublicKeyConverter and PublicKeyProvider
+			const recipientPublicDistKeys = new PublicKeyConverter().convertFromPubDistributionKey(distributionKey, "0")
 
 			const encryptedAdminGroupKeyForThisAdmin = await this.asymmetricCryptoFacade.tutaCryptEncryptSymKey(
 				newSymAdminGroupKey.object,

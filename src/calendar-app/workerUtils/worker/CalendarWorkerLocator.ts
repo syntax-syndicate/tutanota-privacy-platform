@@ -295,8 +295,8 @@ export async function initLocator(worker: CalendarWorkerImpl, browserData: Brows
 		locator.groupManagement,
 		asymmetricCrypto,
 		keyAuthenticationFacade,
-		locator.publicKeyConverter,
 		locator.publicKeyProvider,
+		locator.publicKeyConverter,
 	)
 
 	const loginListener: LoginListener = {

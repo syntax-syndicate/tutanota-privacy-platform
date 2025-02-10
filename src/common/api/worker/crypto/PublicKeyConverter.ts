@@ -1,7 +1,7 @@
-import type { PublicKeyGetOut, SystemKeysReturn } from "../../entities/sys/TypeRefs"
+import type { PubDistributionKey, PublicKeyGetOut, SystemKeysReturn } from "../../entities/sys/TypeRefs"
 import { uint8ArrayToHex, Versioned } from "@tutao/tutanota-utils"
 import { AsymmetricPublicKey, bytesToKyberPublicKey, hexToRsaPublicKey, KeyPairType, PQPublicKeys, RsaEccPublicKey } from "@tutao/tutanota-crypto"
-import { PublicKeys } from "../facades/PublicKeyProvider.js"
+import { parseKeyVersion } from "../facades/KeyLoaderFacade"
 
 type PublicKeyRawData = {
 	pubKeyVersion: NumberString
@@ -11,7 +11,7 @@ type PublicKeyRawData = {
 }
 
 export class PublicKeyConverter {
-	public convertFromPublicKeyGetOut(publicKeys: PublicKeys): Versioned<AsymmetricPublicKey> {
+	public convertFromPublicKeyGetOut(publicKeys: PublicKeyGetOut): Versioned<AsymmetricPublicKey> {
 		return this.convertFromPublicKeyRawData({
 			pubRsaKey: publicKeys.pubRsaKey,
 			pubEccKey: publicKeys.pubEccKey,
@@ -29,8 +29,17 @@ export class PublicKeyConverter {
 		})
 	}
 
+	public convertFromPubDistributionKey(distributionKey: PubDistributionKey, keyVersion: string) {
+		return this.convertFromPublicKeyRawData({
+			pubRsaKey: null,
+			pubEccKey: distributionKey.pubEccKey,
+			pubKyberKey: distributionKey.pubKyberKey,
+			pubKeyVersion: keyVersion,
+		})
+	}
+
 	private convertFromPublicKeyRawData(publicKeys: PublicKeyRawData): Versioned<AsymmetricPublicKey> {
-		const version = Number(publicKeys.pubKeyVersion)
+		const version = parseKeyVersion(publicKeys.pubKeyVersion)
 		if (publicKeys.pubRsaKey) {
 			if (publicKeys.pubEccKey) {
 				const eccPublicKey = publicKeys.pubEccKey

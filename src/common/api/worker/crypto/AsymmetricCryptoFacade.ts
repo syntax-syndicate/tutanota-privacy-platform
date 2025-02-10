@@ -73,19 +73,17 @@ export class AsymmetricCryptoFacade {
 
 		let authStatus = EncryptionAuthStatus.TUTACRYPT_AUTHENTICATION_SUCCEEDED
 
-		const providedKeys = await this.publicKeyProvider.loadVersionedPubKey(identifier, senderKeyVersion)
+		const publicKey = await this.publicKeyProvider.loadVersionedPubKey(identifier, senderKeyVersion)
 
-		if (isVersionedPqPublicKey(providedKeys)) {
-			// TODO: useless cast
-			// const { object: publicKeys } = providedKeys as Versioned<PQPublicKeys>
-			if (publicKeys.pubEccKey == null || !arrayEquals(publicKeys.pubEccKey, senderIdentityPubKey)) {
+		if (isVersionedPqPublicKey(publicKey)) {
+			if (publicKey.object.eccPublicKey == null || !arrayEquals(publicKey.object.eccPublicKey, senderIdentityPubKey)) {
 				authStatus = EncryptionAuthStatus.TUTACRYPT_AUTHENTICATION_FAILED
 			}
 
 			// Compare against trusted identity (if possible)
 			if (identifier.identifierType == PublicKeyIdentifierType.MAIL_ADDRESS) {
 				// const publicKey = this.publicKeyConverter.convertFromPublicKeyGetOut(publicKeys)
-				if ((await keyVerificationFacade.resolveVerificationState(identifier.identifier, publicKeys)) === KeyVerificationState.MISMATCH) {
+				if ((await keyVerificationFacade.resolveVerificationState(identifier.identifier, publicKey)) === KeyVerificationState.MISMATCH) {
 					authStatus = EncryptionAuthStatus.TUTACRYPT_AUTHENTICATION_FAILED
 				}
 			}
