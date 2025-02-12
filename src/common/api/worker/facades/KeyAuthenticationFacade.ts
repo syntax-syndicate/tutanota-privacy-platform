@@ -1,8 +1,19 @@
 import { CryptoWrapper } from "../crypto/CryptoWrapper.js"
-import { assertNotNull, concat, KeyVersion } from "@tutao/tutanota-utils"
-import { Aes256Key, AesKey, bitArrayToUint8Array, EncryptedPqKeyPairs, KeyPairType, MacTag, PQPublicKeys } from "@tutao/tutanota-crypto"
+import { assertNotNull, concat, KeyVersion, Versioned } from "@tutao/tutanota-utils"
+import {
+	Aes256Key,
+	AesKey,
+	AsymmetricPublicKey,
+	bitArrayToUint8Array,
+	EncryptedPqKeyPairs,
+	isVersionedPqPublicKey,
+	KeyPairType,
+	MacTag,
+	PQPublicKeys,
+} from "@tutao/tutanota-crypto"
 import { assertWorkerOrNode } from "../../common/Env.js"
 import { KeyMac, PubDistributionKey } from "../../entities/sys/TypeRefs.js"
+import { ProgrammingError } from "../../common/error/ProgrammingError.js"
 
 assertWorkerOrNode()
 
@@ -224,4 +235,15 @@ export function asPQPublicKeys(kp: EncryptedPqKeyPairs | PubDistributionKey): PQ
 			raw: assertNotNull(kp.pubKyberKey),
 		},
 	}
+}
+
+/**
+ * Converts some form of public PQ keys to the PQPublicKeys type. Assumes pubEccKey and pubKyberKey exist.
+ * @param kp
+ */
+export function asPQPublicKeysFromVersionedPubKey(kp: Versioned<AsymmetricPublicKey>): PQPublicKeys {
+	if (isVersionedPqPublicKey(kp)) {
+		return kp.object
+	}
+	throw new ProgrammingError("Expecting PQ Public keys")
 }

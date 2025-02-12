@@ -102,7 +102,7 @@ import { RecipientsNotFoundError } from "../../common/error/RecipientsNotFoundEr
 import { LockedError } from "../../common/error/RestError.js"
 import { AsymmetricCryptoFacade } from "../crypto/AsymmetricCryptoFacade.js"
 import { TutanotaError } from "@tutao/tutanota-error"
-import { asPQPublicKeys, brandKeyMac, KeyAuthenticationFacade } from "./KeyAuthenticationFacade.js"
+import { asPQPublicKeys, asPQPublicKeysFromVersionedPubKey, brandKeyMac, KeyAuthenticationFacade } from "./KeyAuthenticationFacade.js"
 import { PublicKeyConverter } from "../crypto/PublicKeyConverter"
 import { PublicKeyProvider } from "./PublicKeyProvider.js"
 
@@ -1027,7 +1027,7 @@ export class KeyRotationFacade {
 			{
 				tagType: "NEW_ADMIN_PUB_KEY_TAG",
 				sourceOfTrust: { receivingUserGroupKey: currentUserGroupKey.object },
-				untrustedKey: { newAdminPubKey: asPQPublicKeys(currentAdminPubKeys.object) },
+				untrustedKey: { newAdminPubKey: asPQPublicKeysFromVersionedPubKey(currentAdminPubKeys) },
 				bindingData: {
 					userGroupId,
 					adminGroupId,
