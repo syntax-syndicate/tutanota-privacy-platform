@@ -950,24 +950,26 @@ export class SearchViewModel {
 				}
 			},
 			sortCompare: (o1: SearchResultListEntry, o2: SearchResultListEntry) => {
-				if (isSameTypeRef(o1.entry._type, ContactTypeRef)) {
-					return compareContacts(o1.entry as any, o2.entry as any)
-				} else if (isSameTypeRef(o1.entry._type, CalendarEventTypeRef)) {
-					return downcast(o1.entry).startTime.getTime() - downcast(o2.entry).startTime.getTime()
-				} else if (isSameTypeRef(o1.entry._type, MailTypeRef)) {
-					// Ideally we would not need to do this check here, however we can only safely sort by received date
-					// on SQLite results, as we get all results upfront.
-					//
-					// IndexedDb only loads a small amount of results at once, expanding the results as we scroll
-					// through the list, and since it's loaded by ID range, results can jump around mid-scroll.
-					if (isOfflineStorageAvailable()) {
-						return compareMails(downcast(o1.entry), downcast(o2.entry))
-					} else {
-						return sortCompareByReverseId(o1.entry, o2.entry)
-					}
-				} else {
-					return sortCompareByReverseId(o1.entry, o2.entry)
-				}
+				// We want to use the order that the search query returns, the results are ranked by how relevant they are
+				return 0
+				// if (isSameTypeRef(o1.entry._type, ContactTypeRef)) {
+				// 	return compareContacts(o1.entry as any, o2.entry as any)
+				// } else if (isSameTypeRef(o1.entry._type, CalendarEventTypeRef)) {
+				// 	return downcast(o1.entry).startTime.getTime() - downcast(o2.entry).startTime.getTime()
+				// } else if (isSameTypeRef(o1.entry._type, MailTypeRef)) {
+				// 	// Ideally we would not need to do this check here, however we can only safely sort by received date
+				// 	// on SQLite results, as we get all results upfront.
+				// 	//
+				// 	// IndexedDb only loads a small amount of results at once, expanding the results as we scroll
+				// 	// through the list, and since it's loaded by ID range, results can jump around mid-scroll.
+				// 	if (isOfflineStorageAvailable()) {
+				// 		return compareMails(downcast(o1.entry), downcast(o2.entry))
+				// 	} else {
+				// 		return sortCompareByReverseId(o1.entry, o2.entry)
+				// 	}
+				// } else {
+				// 	return sortCompareByReverseId(o1.entry, o2.entry)
+				// }
 			},
 			autoSelectBehavior: () => (isSameTypeRef(this.searchedType, MailTypeRef) ? this.selectionBehavior : ListAutoSelectBehavior.OLDER),
 		})

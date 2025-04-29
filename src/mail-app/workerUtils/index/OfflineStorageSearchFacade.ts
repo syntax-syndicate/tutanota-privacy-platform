@@ -70,7 +70,7 @@ export class OfflineStorageSearchFacade implements SearchFacade {
               AND instr(content_mail_index.sets, ${idToSearch}) > 0
               AND content_mail_index.receivedDate <= ${restriction.start ?? Number.MAX_SAFE_INTEGER}
               AND content_mail_index.receivedDate >= ${restriction.end ?? 0}
-            ORDER BY content_mail_index.receivedDate DESC`
+            ORDER BY rank`
 		const resultRows = await this.sqlCipherFacade.all(preparedSqlQuery.query, preparedSqlQuery.params)
 		const resultIds = resultRows.map(({ listId, elementId }) => {
 			return [untagSqlValue(listId) as string, untagSqlValue(elementId) as string] satisfies IdTuple
