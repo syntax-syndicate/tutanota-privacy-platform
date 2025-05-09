@@ -22,11 +22,22 @@ export type Theme = {
 	// Basic color tokens
 	primary: string
 	on_primary: string
+	primary_container: string
+	on_primary_container: string
 	secondary: string
 	on_secondary: string
+	secondary_container: string
+	on_secondary_container: string
+	tertiary: string
+	on_tertiary: string
+	tertiary_container: string
+	on_tertiary_container: string
 	error: string
 	surface: string
+	surface_dim: string
 	surface_container: string
+	surface_container_low: string
+	surface_container_high: string
 	/**
 	 * @deprecated This token should not be used.
 	 * It was created temporarily for the purpose of color theme migration.
@@ -88,7 +99,7 @@ export function getElevatedBackground(): string {
 }
 
 export function getNavigationMenuBg(): string {
-	return isColorLight(theme.surface) ? theme.secondary : theme.surface
+	return isColorLight(theme.surface) ? theme.surface_container_high : theme.surface
 }
 
 export function getLightOrDarkTutaLogo(isCalendarApp: boolean): string {
