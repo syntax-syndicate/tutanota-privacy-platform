@@ -2332,7 +2332,10 @@ styles.registerStyle("main", () => {
 			"box-sizing": "content-box",
 		},
 		".calendar-current-day-circle": {
-			"background-color": theme.on_surface_variant,
+			"background-color": theme.primary_container,
+		},
+		".calendar-current-day-circle-small": {
+			"background-color": theme.primary,
 		},
 		".calendar-selected-day-circle": {
 			"background-color": theme.primary,
@@ -2348,7 +2351,11 @@ styles.registerStyle("main", () => {
 			height: "44px",
 		},
 		".calendar-current-day-text": {
-			color: theme.surface,
+			color: theme.on_primary_container,
+			"font-weight": "bold",
+		},
+		".calendar-current-day-text-small": {
+			color: theme.on_primary,
 			"font-weight": "bold",
 		},
 		".calendar-selected-day-text": {
@@ -2835,7 +2842,7 @@ styles.registerStyle("main", () => {
 			display: "block",
 			width: "45.5px",
 			height: "28px",
-			"background-color": theme.on_surface_fade,
+			"background-color": theme.surface_container_high,
 			"border-radius": px(size.vpad_small * 4),
 			transition: `background-color ${DefaultAnimationTime}ms ease-out`,
 		},
