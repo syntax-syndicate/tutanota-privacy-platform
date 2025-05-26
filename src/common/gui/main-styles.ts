@@ -5,7 +5,7 @@ import { lang } from "../misc/LanguageViewModel"
 import { noselect, position_absolute } from "./mixins"
 import { assertMainOrNode, isAdminClient, isApp, isElectronClient } from "../api/common/Env"
 import { getElevatedBackground, getNavigationMenuBg, theme } from "./theme"
-import { stateBgActive, stateBgFocus, stateBgHover, stateBgLike } from "./builtinThemes.js"
+import { stateBgActive, stateBgFocus, stateBgHover } from "./builtinThemes.js"
 import { FontIcons } from "./base/icons/FontIcons.js"
 import { DefaultAnimationTime } from "./animation/Animations.js"
 import { locator } from "../api/main/CommonLocator.js"
@@ -1250,7 +1250,7 @@ styles.registerStyle("main", () => {
 		},
 		".search-bar": {
 			transition: "all 200ms",
-			"background-color": stateBgLike,
+			"background-color": theme.surface_container_high,
 		},
 		".search-bar:hover": {
 			"background-color": stateBgHover,
@@ -2842,7 +2842,7 @@ styles.registerStyle("main", () => {
 			display: "block",
 			width: "45.5px",
 			height: "28px",
-			"background-color": theme.surface_container_high,
+			"background-color": theme.on_surface_fade,
 			"border-radius": px(size.vpad_small * 4),
 			transition: `background-color ${DefaultAnimationTime}ms ease-out`,
 		},

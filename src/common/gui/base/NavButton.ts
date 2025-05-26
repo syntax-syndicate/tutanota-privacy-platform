@@ -13,7 +13,6 @@ import { Keys } from "../../api/common/TutanotaConstants"
 import { isKeyPressed } from "../../misc/KeyManager"
 import { DropData, DropHandler, DropType } from "./GuiUtils"
 import { assertMainOrNode, isDesktop } from "../../api/common/Env"
-import { stateBgHover } from "../builtinThemes.js"
 import { fileListToArray } from "../../api/common/utils/FileUtils.js"
 
 assertMainOrNode()
@@ -116,9 +115,11 @@ export class NavButton implements Component<NavButtonAttrs> {
 			// role button for screen readers
 			href: this._getUrl(a.href),
 			style: {
-				color: isNavButtonSelected(a) || this._draggedOver ? getColors(a.colors).button_selected : getColors(a.colors).button,
+				// color: isNavButtonSelected(a) || this._draggedOver ? getColors(a.colors).button_selected : getColors(a.colors).button,
 				"font-size": a.fontSize ? px(a.fontSize) : "",
-				background: (isNavButtonSelected(a) && a.persistentBackground) || this._draggedOver ? stateBgHover : "",
+				// background: (isNavButtonSelected(a) && a.persistentBackground) || this._draggedOver ? stateBgHover : "",
+				background: isNavButtonSelected(a) ? theme.surface_container_high : "transparent",
+				color: this._draggedOver ? theme.on_surface_variant : theme.on_surface_variant,
 			},
 			title: lang.getTranslationText(a.label),
 			target: this._isExternalUrl(a.href) ? "_blank" : undefined,
