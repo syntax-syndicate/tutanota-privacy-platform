@@ -5,10 +5,10 @@ import { lang } from "../misc/LanguageViewModel"
 import { noselect, position_absolute } from "./mixins"
 import { assertMainOrNode, isAdminClient, isApp, isElectronClient } from "../api/common/Env"
 import { getElevatedBackground, getNavigationMenuBg, theme } from "./theme"
-import { stateBgActive, stateBgFocus, stateBgHover } from "./builtinThemes.js"
 import { FontIcons } from "./base/icons/FontIcons.js"
 import { DefaultAnimationTime } from "./animation/Animations.js"
 import { locator } from "../api/main/CommonLocator.js"
+import { stateBgActive, stateBgFocus, stateBgHover } from "./builtinThemes.js"
 
 assertMainOrNode()
 
@@ -1670,6 +1670,9 @@ styles.registerStyle("main", () => {
 		".input": {
 			outline: "none",
 		},
+		".input::placeholder": {
+			color: theme.on_surface_variant,
+		},
 		"blockquote.tutanota_quote, blockquote[type=cite]": {
 			"border-left": `1px solid ${theme.primary}`,
 			"padding-left": px(size.hpad),
@@ -2332,13 +2335,13 @@ styles.registerStyle("main", () => {
 			"box-sizing": "content-box",
 		},
 		".calendar-current-day-circle": {
-			"background-color": theme.primary_container,
+			"background-color": theme.primary,
 		},
 		".calendar-current-day-circle-small": {
 			"background-color": theme.primary,
 		},
 		".calendar-selected-day-circle": {
-			"background-color": theme.primary,
+			"background-color": theme.surface_container_highest,
 		},
 		".weekday-button-unselected-circle": {
 			border: `${px(1)} solid ${theme.primary}`,
@@ -2351,7 +2354,7 @@ styles.registerStyle("main", () => {
 			height: "44px",
 		},
 		".calendar-current-day-text": {
-			color: theme.on_primary_container,
+			color: theme.on_primary,
 			"font-weight": "bold",
 		},
 		".calendar-current-day-text-small": {
@@ -2359,7 +2362,7 @@ styles.registerStyle("main", () => {
 			"font-weight": "bold",
 		},
 		".calendar-selected-day-text": {
-			color: theme.surface,
+			color: theme.on_surface_variant,
 			"font-weight": "bold",
 		},
 		".animation-reverse": {
@@ -2824,13 +2827,13 @@ styles.registerStyle("main", () => {
 			"background-color": theme.surface_container_high,
 		},
 		".tutaui-text-field::placeholder": {
-			color: theme.on_surface_fade,
+			color: theme.on_surface_variant,
 		},
 		".text-editor-placeholder": {
 			position: "absolute",
 			top: px(size.vpad_small),
 			left: px(size.vpad_small),
-			color: theme.on_surface_fade,
+			color: theme.on_surface_variant,
 		},
 		".tutaui-switch": {
 			display: "flex",
@@ -2842,8 +2845,10 @@ styles.registerStyle("main", () => {
 			display: "block",
 			width: "45.5px",
 			height: "28px",
-			"background-color": theme.on_surface_fade,
+			// FIXME: apply border
+			"background-color": theme.surface_container_high,
 			"border-radius": px(size.vpad_small * 4),
+			border: `2px solid ${theme.outline}`,
 			transition: `background-color ${DefaultAnimationTime}ms ease-out`,
 		},
 		".tutaui-toggle-pill:after": {
@@ -2857,7 +2862,7 @@ styles.registerStyle("main", () => {
 			"-ms-transform": "translateY(-50%)",
 			transform: "translateY(-50%)",
 			margin: "0 4px",
-			"background-color": "#fff",
+			"background-color": theme.outline,
 			"border-radius": "50%",
 			left: 0,
 			transition: `left ${DefaultAnimationTime}ms ease-out`,
@@ -2870,9 +2875,11 @@ styles.registerStyle("main", () => {
 		},
 		".tutaui-toggle-pill.checked": {
 			"background-color": theme.primary,
+			border: `2px solid ${theme.primary}`,
 		},
 		".tutaui-toggle-pill.checked:after": {
 			left: "calc(100% - 29px)",
+			"background-color": theme.on_primary,
 		},
 		".tutaui-toggle-pill input[type='checkbox']": {
 			"z-index": "-1",

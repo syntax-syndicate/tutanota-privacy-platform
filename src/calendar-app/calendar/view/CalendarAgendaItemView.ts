@@ -1,13 +1,12 @@
 import m, { Children, Component, Vnode } from "mithril"
 import { CalendarEvent } from "../../../common/api/entities/tutanota/TypeRefs.js"
-import { stateBgFocus, stateBgHover } from "../../../common/gui/builtinThemes.js"
 import { theme } from "../../../common/gui/theme.js"
 import { styles } from "../../../common/gui/styles.js"
 import { DefaultAnimationTime } from "../../../common/gui/animation/Animations.js"
 import { px } from "../../../common/gui/size.js"
 import { TabIndex } from "../../../common/api/common/TutanotaConstants.js"
 import { getDisplayEventTitle } from "../gui/CalendarGuiUtils.js"
-import { isBirthdayEvent } from "../../../common/calendar/date/CalendarUtils.js"
+import { stateBgFocus, stateBgHover } from "../../../common/gui/builtinThemes.js"
 
 export interface CalendarAgendaItemViewAttrs {
 	day: Date

@@ -34,44 +34,17 @@ const BLUE_FIGHTER = "#0040FF"
  *      light theme background
  */
 const light_white = "#ffffff"
-const grey_lighter_4 = "#f6f6f6"
-const grey_lighter_3 = "#eaeaea"
-const grey_lighter_2 = "#e1e1e1"
-const grey_lighter_1 = "#d5d5d5"
-const grey_lighter_0 = "#b8b8b8"
-const grey = "#868686"
-const grey_darker_0 = "#707070"
-const grey_darker_1 = "#303030"
 const red = "#850122"
 const secondary_red = "#FF2222"
 const red_nota = "#d93951"
 const dunkel = "#410002"
 const blue = "#003E85"
 const secondary_blue = "#4282FF"
-const blue_nota = "#3964d9"
-const light_blue = "#ACC7FF"
 const dark_purple = "#AC3E80"
 const light_purple = "#FCBFDE"
 
-/**
- *      dark theme background
- *
- *      Assuming the background is black #000000 (rgb(0,0,0)) and text is white #000000 (rgb(255, 255, 255)) and recommended opacity of 87%
- *        we get (x1 being foreground, x2 being background, x3 being result)
- *        x3 = x2 + (x1-x2)*a1 or x3 = 0 + (255 - 0) * 0.87 = 221
- *        rgb(221, 221, 221) = #DDDDDD
- *      https://stackoverflow.com/questions/12228548/finding-equivalent-color-with-opacity
- *
- */
-const light_lighter_1 = "#DDDDDD"
-const light_lighter_0 = "#aeaeae"
-const light_grey = "#999999"
-const dark_lighter_2 = "#4e4e4e"
-const dark_lighter_1 = "#363636"
 const dark_lighter_0 = "#232323"
 const dark = "#222222"
-const dark_darker_0 = "#111111"
-const light_red = "#E99497"
 const logo_text_bright_grey = "#c5c7c7"
 const black = "#000000"
 
@@ -79,12 +52,10 @@ const black = "#000000"
 export const secondary_fixed = "#FFDDB2"
 export const on_secondary_fixed = "#291800"
 
-// These are constants that have been chosen because they work across themes
-// This is even lighter than hover, for special cases like inactive search bar background
-export const stateBgLike = "rgba(210,196,186,0.20)"
 export const stateBgHover = "rgb(210,196,186,0.30)"
 export const stateBgFocus = "rgba(210,196,186,0.40)"
 export const stateBgActive = "rgba(210,196,186,0.50)"
+
 export const logoDefaultGrey = logo_text_bright_grey
 export const tutaRed = red
 export const tutaDunkel = dunkel
@@ -130,7 +101,7 @@ export const themes = (): Themes => {
 		on_primary: "#FFFFFF",
 		primary_container: "#FFDADA",
 		on_primary_container: "#733337",
-		secondary: "#7F5610",
+		secondary: "#A2752F",
 		on_secondary: "#FFFFFF",
 		secondary_container: "#FFDDB2",
 		on_secondary_container: "#624000",
@@ -142,10 +113,12 @@ export const themes = (): Themes => {
 		surface: "#FFFFFF",
 		surface_dim: "#FBEBE1",
 		on_surface: "#221A14",
+		surface_container_low: "#FFF1E8",
 		surface_container: "#fcf9f6",
 		surface_container_high: "#f5eeea",
+		surface_container_highest: "#EFE0D5",
 		on_surface_variant: "#524343",
-		on_surface_fade: "#EFE0D5", // neutral-variant-50
+		on_surface_fade: "#524343",
 		outline: "#857373",
 		outline_variant: "#D7C1C1",
 		scrim: "#000000",
@@ -179,10 +152,12 @@ export const themes = (): Themes => {
 		error: "#FFB4AB",
 		surface: "#1a1111",
 		surface_dim: "#000000",
+		surface_container_low: "#221A14",
 		surface_container: "#271d1d",
 		surface_container_high: "#322828",
+		surface_container_highest: "#3C332C",
 		on_surface_fade: "#877878",
-		on_surface: "#f0dede",
+		on_surface: "#f5ebeb",
 		on_surface_variant: "#d7c1c1",
 		outline: "#9F8C8C",
 		outline_variant: "#524343",
@@ -218,8 +193,10 @@ export const themes = (): Themes => {
 		error: "#BA1A1A",
 		surface: "#FFFFFF",
 		surface_dim: "#f7f9ff",
+		surface_container_low: "#F1F4F9",
 		surface_container: "#f7f9fc",
 		surface_container_high: "#ebeef5",
+		surface_container_highest: "#E0E3E8",
 		on_surface_fade: "#9c9fa9",
 		on_surface: "#221A14",
 		on_surface_variant: "#44474E",
@@ -256,8 +233,10 @@ export const themes = (): Themes => {
 		error: "#FFB4AB",
 		surface: "#101418",
 		surface_dim: "#000000",
+		surface_container_low: "#181C20",
 		surface_container: "#1c2024",
 		surface_container_high: "#272a2f",
+		surface_container_highest: "#313539",
 		on_surface_fade: "#aaacb7",
 		on_surface: "#e0e2e8",
 		on_surface_variant: "#c4c6d0",

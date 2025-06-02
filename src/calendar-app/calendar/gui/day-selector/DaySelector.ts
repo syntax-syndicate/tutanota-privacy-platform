@@ -196,8 +196,8 @@ export class DaySelector implements Component<DaySelectorAttrs> {
 
 		if (highlight) {
 			style = {
-				backgroundColor: theme.primary_container,
-				color: theme.on_primary_container,
+				backgroundColor: theme.surface_container_highest,
+				color: theme.on_surface_variant,
 				height: px(styles.isDesktopLayout() ? 19 : 25),
 				borderRadius: px(styles.isDesktopLayout() ? 6 : 25),
 				width: `calc(100% - ${px(size.hpad_small)})`,

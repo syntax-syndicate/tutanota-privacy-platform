@@ -37,6 +37,7 @@ export type Theme = {
 	surface_dim: string
 	surface_container: string
 	surface_container_high: string
+	surface_container_highest: string
 	/**
 	 * @deprecated This token should not be used.
 	 * It was created temporarily for the purpose of color theme migration.

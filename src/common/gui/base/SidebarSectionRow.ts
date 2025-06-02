@@ -2,12 +2,12 @@ import m, { Children, Component, Vnode } from "mithril"
 import { AllIcons, Icon, IconSize } from "./Icon"
 import { isNavButtonSelected, NavButton, NavButtonAttrs } from "./NavButton"
 import { ClickHandler } from "./GuiUtils"
-import type { TranslationKey, MaybeTranslation } from "../../misc/LanguageViewModel"
-import type { lazy } from "@tutao/tutanota-utils"
-import { stateBgHover } from "../builtinThemes"
+import type { MaybeTranslation } from "../../misc/LanguageViewModel"
 import { client } from "../../misc/ClientDetector"
 import { IconButton, IconButtonAttrs } from "./IconButton"
 import { theme } from "../theme"
+
+import { stateBgHover } from "../builtinThemes.js"
 
 export interface SidebarSectionRowAttrs {
 	icon: AllIcons
@@ -47,6 +47,7 @@ export class SidebarSectionRow implements Component<SidebarSectionRowAttrs> {
 			label: attrs.label,
 			href: () => attrs.path,
 			disableHoverBackground: true,
+			disableSelectedBackground: true,
 			click: attrs.onClick,
 			onfocus: onHover,
 			onkeydown: handleBackwardsTab,
