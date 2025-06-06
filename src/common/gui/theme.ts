@@ -48,7 +48,6 @@ export type Theme = {
 	experimental_primary_container: string
 	experimental_on_primary_container: string
 	experimental_tertiary: string
-	outline_variant: string
 }
 
 const themeSingleton = {}

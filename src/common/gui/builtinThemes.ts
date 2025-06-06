@@ -144,7 +144,6 @@ export const themes = (): Themes => {
 		experimental_tertiary: RED_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
-		outline_variant: grey_lighter_1,
 	})
 	const darkRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "dark" : "dark_secondary",
@@ -173,7 +172,6 @@ export const themes = (): Themes => {
 		experimental_tertiary: RED_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
-		outline_variant: grey_darker_0,
 	})
 	const lightBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "light" : "light_secondary",
@@ -203,7 +201,6 @@ export const themes = (): Themes => {
 		experimental_tertiary: BLUE_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
-		outline_variant: grey_lighter_1,
 	})
 	const darkBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "dark" : "dark_secondary",
@@ -232,7 +229,6 @@ export const themes = (): Themes => {
 		experimental_tertiary: BLUE_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
-		outline_variant: grey_darker_0,
 	})
 
 	return {
