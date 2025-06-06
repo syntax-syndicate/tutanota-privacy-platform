@@ -35,6 +35,7 @@ export type Theme = {
 	error: string
 	surface: string
 	surface_dim: string
+	surface_container_low: string
 	surface_container: string
 	surface_container_high: string
 	surface_container_highest: string
