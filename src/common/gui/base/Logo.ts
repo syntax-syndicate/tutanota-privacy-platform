@@ -6,19 +6,10 @@ import { theme } from "../theme.js"
 assertMainOrNodeBoot()
 
 export function getTutaLogo(isCalendarApp: boolean): string {
-	// Use tuta logo with our brand colors
-	const isCalendarTheme = (theme.themeId === "light" && isCalendarApp) || (theme.themeId === "light_secondary" && !isCalendarApp)
 	if (isColorLight(theme.surface)) {
-		if (isCalendarTheme) {
-			return getTutaLogoSvg("#00ff00")
-		}
 		return getTutaLogoSvg()
-	} else {
-		if (isCalendarTheme) {
-			return getTutaLogoSvg("#00ffff")
-		}
-		return getTutaLogoSvg("#ffff00")
 	}
+	return getTutaLogoSvg("#fff")
 }
 
 export function getAppLogo(fillColor?: string) {
