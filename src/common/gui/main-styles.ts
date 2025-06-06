@@ -8,7 +8,6 @@ import { getElevatedBackground, getNavigationMenuBg, theme } from "./theme"
 import { FontIcons } from "./base/icons/FontIcons.js"
 import { DefaultAnimationTime } from "./animation/Animations.js"
 import { locator } from "../api/main/CommonLocator.js"
-import { stateBgActive, stateBgFocus, stateBgHover } from "./builtinThemes.js"
 
 assertMainOrNode()
 
@@ -1253,7 +1252,7 @@ styles.registerStyle("main", () => {
 			"background-color": theme.surface_container_high,
 		},
 		".search-bar:hover": {
-			"background-color": stateBgHover,
+			"background-color": theme.state_bg_hover,
 		},
 		".search-bar[focused=true]": {
 			"background-color": theme.surface,
@@ -1406,17 +1405,17 @@ styles.registerStyle("main", () => {
 		// Use :where() to not count towards specificity, otherwise this is more specific
 		// than :active (which is unconditional
 		":where(.mouse-nav) .state-bg:hover, :where(.keyboard-nav) .state-bg:hover": {
-			background: stateBgHover,
+			background: theme.state_bg_hover,
 			"transition-duration": ".3s",
 		},
 		":where(.keyboard-nav) .state-bg:focus": {
-			background: stateBgFocus,
+			background: theme.state_bg_focus,
 			"transition-duration": ".3s",
 			// disable default focus indicator because we have our own for this element
 			outline: "none",
 		},
 		".state-bg:active, .state-bg[pressed=true]": {
-			background: stateBgActive,
+			background: theme.state_bg_active,
 			"transition-duration": ".3s",
 		},
 		// State layer roughly like in Material 3.
@@ -1918,27 +1917,27 @@ styles.registerStyle("main", () => {
 		},
 		".icon-segment-control-item": {
 			// Make thin border between items via border-right
-			"border-top": `1px solid ${stateBgHover}`,
-			"border-bottom": `1px solid ${stateBgHover}`,
-			"border-right": `0.5px solid ${stateBgHover}`,
+			"border-top": `1px solid ${theme.state_bg_hover}`,
+			"border-bottom": `1px solid ${theme.state_bg_hover}`,
+			"border-right": `0.5px solid ${theme.state_bg_hover}`,
 			width: px(size.icon_segment_control_button_width),
 			height: px(size.icon_segment_control_button_height),
 			cursor: "pointer",
 			background: "transparent",
 		},
 		".icon-segment-control-item[active]": {
-			background: stateBgHover,
+			background: theme.state_bg_hover,
 			"transition-duration": ".3s",
 		},
 		".icon-segment-control-item:first-child": {
 			"border-bottom-left-radius": px(size.border_radius),
 			"border-top-left-radius": px(size.border_radius),
-			"border-left": `1px solid ${stateBgHover}`,
+			"border-left": `1px solid ${theme.state_bg_hover}`,
 		},
 		".icon-segment-control-item:last-child": {
 			"border-bottom-right-radius": px(size.border_radius),
 			"border-top-right-radius": px(size.border_radius),
-			"border-right": `1px solid ${stateBgHover}`,
+			"border-right": `1px solid ${theme.state_bg_hover}`,
 		},
 		".payment-logo": {
 			// that's the size of the SVG and it seems to be a good size
@@ -2261,10 +2260,10 @@ styles.registerStyle("main", () => {
 			left: "-15px",
 		},
 		".checkbox:hover:before": {
-			background: stateBgHover,
+			background: theme.state_bg_hover,
 		},
 		".checkbox:active:before": {
-			background: stateBgActive,
+			background: theme.state_bg_active,
 		},
 		".list-checkbox": {
 			opacity: "0.4",

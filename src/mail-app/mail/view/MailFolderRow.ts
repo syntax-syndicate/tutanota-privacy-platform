@@ -12,8 +12,6 @@ import { lang } from "../../../common/misc/LanguageViewModel.js"
 import { MailFolder } from "../../../common/api/entities/tutanota/TypeRefs"
 import { getFolderIcon } from "./MailGuiUtils"
 
-import { stateBgHover } from "../../../common/gui/builtinThemes.js"
-
 export type MailFolderRowAttrs = {
 	count: number
 	button: NavButtonAttrs
@@ -67,7 +65,7 @@ export class MailFolderRow implements Component<MailFolderRowAttrs> {
 			".folder-row.flex.flex-row.mlr-button.border-radius-small.state-bg",
 			{
 				style: {
-					background: isNavButtonSelected(button) ? stateBgHover : "",
+					background: isNavButtonSelected(button) ? theme.state_bg_hover : "",
 				},
 				title: lang.getTranslationText(button.label),
 				onmouseenter: onHover,

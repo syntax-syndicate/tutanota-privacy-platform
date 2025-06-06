@@ -15,8 +15,6 @@ import { DropData, DropHandler, DropType } from "./GuiUtils"
 import { assertMainOrNode, isDesktop } from "../../api/common/Env"
 import { fileListToArray } from "../../api/common/utils/FileUtils.js"
 
-import { stateBgHover } from "../builtinThemes.js"
-
 assertMainOrNode()
 export type NavButtonAttrs = {
 	label: MaybeTranslation
@@ -119,7 +117,7 @@ export class NavButton implements Component<NavButtonAttrs> {
 			href: this._getUrl(a.href),
 			style: {
 				"font-size": a.fontSize ? px(a.fontSize) : "",
-				background: this._draggedOver || (isNavButtonSelected(a) && !a.disableSelectedBackground) ? stateBgHover : "transparent",
+				background: this._draggedOver || (isNavButtonSelected(a) && !a.disableSelectedBackground) ? theme.state_bg_hover : "transparent",
 				color: this._draggedOver || isNavButtonSelected(a) ? theme.primary : theme.on_surface_variant,
 			},
 			title: lang.getTranslationText(a.label),

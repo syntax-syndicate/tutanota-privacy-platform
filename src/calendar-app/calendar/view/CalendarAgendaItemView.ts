@@ -6,7 +6,6 @@ import { DefaultAnimationTime } from "../../../common/gui/animation/Animations.j
 import { px } from "../../../common/gui/size.js"
 import { TabIndex } from "../../../common/api/common/TutanotaConstants.js"
 import { getDisplayEventTitle } from "../gui/CalendarGuiUtils.js"
-import { stateBgFocus, stateBgHover } from "../../../common/gui/builtinThemes.js"
 
 export interface CalendarAgendaItemViewAttrs {
 	day: Date
@@ -56,10 +55,10 @@ export class CalendarAgendaItemView implements Component<CalendarAgendaItemViewA
 	private static getBackground(isSelected: boolean, isFocused: boolean) {
 		if (styles.isDesktopLayout()) {
 			if (isSelected) {
-				return stateBgHover
+				return theme.state_bg_hover
 			} else {
 				if (isFocused) {
-					return stateBgFocus
+					return theme.state_bg_focus
 				} else {
 					return theme.surface
 				}

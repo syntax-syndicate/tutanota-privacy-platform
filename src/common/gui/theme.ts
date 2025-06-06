@@ -49,7 +49,11 @@ export type Theme = {
 	outline: string
 	outline_variant: string
 	scrim: string
-	// Campaign colors
+	// State colors; These are not the Material 3 color tokens. We are not following the M3 guideline to simplify state representations.
+	state_bg_hover: string
+	state_bg_focus: string
+	state_bg_active: string
+	// Campaign colors; These colors are ONLY for campaign use.
 	content_bg_tuta_bday: string
 	content_accent_tuta_bday: string
 	content_accent_secondary_tuta_bday: string

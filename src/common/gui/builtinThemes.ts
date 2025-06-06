@@ -52,10 +52,6 @@ const black = "#000000"
 export const secondary_fixed = "#FFDDB2"
 export const on_secondary_fixed = "#291800"
 
-export const stateBgHover = "rgb(210,196,186,0.30)"
-export const stateBgFocus = "rgba(210,196,186,0.40)"
-export const stateBgActive = "rgba(210,196,186,0.50)"
-
 export const logoDefaultGrey = logo_text_bright_grey
 export const tutaRed = red
 export const tutaDunkel = dunkel
@@ -91,11 +87,6 @@ export const themes = (): Themes => {
 	const lightRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "light" : "light_secondary",
 		logo: getLogo(false, !isCalendarApp),
-		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: dark_purple,
-		content_accent_secondary_tuta_bday: light_purple,
-		content_bg_tuta_bday: dark,
 		// Basic color tokens
 		primary: "#8F4A4E",
 		on_primary: "#FFFFFF",
@@ -127,15 +118,19 @@ export const themes = (): Themes => {
 		experimental_tertiary: RED_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
+		// state colors; based on outline_variant, with alpha
+		state_bg_hover: "#D7C1C144",
+		state_bg_focus: "#D7C1C155",
+		state_bg_active: "#D7C1C166",
+		// Campaign colors
+		tuta_color_nota: red_nota,
+		content_accent_tuta_bday: dark_purple,
+		content_accent_secondary_tuta_bday: light_purple,
+		content_bg_tuta_bday: dark,
 	})
 	const darkRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "dark" : "dark_secondary",
 		logo: getLogo(true, !isCalendarApp),
-		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: light_purple,
-		content_accent_secondary_tuta_bday: dark_purple,
-		content_bg_tuta_bday: light_white,
 		// Basic color tokens
 		primary: "#FFB3B5",
 		on_primary: "#561D22",
@@ -167,16 +162,19 @@ export const themes = (): Themes => {
 		experimental_tertiary: RED_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
+		// state colors; based on outline_variant, with alpha
+		state_bg_hover: "#52434377",
+		state_bg_focus: "#52434399",
+		state_bg_active: "#524343AA",
+		// Campaign colors
+		tuta_color_nota: red_nota,
+		content_accent_tuta_bday: light_purple,
+		content_accent_secondary_tuta_bday: dark_purple,
+		content_bg_tuta_bday: light_white,
 	})
 	const lightBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "light" : "light_secondary",
-		// blue is not really our brand color, treat blue like whitelabel color
 		logo: getLogo(false, isCalendarApp),
-		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: dark_purple,
-		content_accent_secondary_tuta_bday: light_purple,
-		content_bg_tuta_bday: dark,
 		// Basic color tokens
 		primary: "#435E91",
 		on_primary: "#FFFFFF",
@@ -208,15 +206,19 @@ export const themes = (): Themes => {
 		experimental_tertiary: BLUE_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
+		// state colors; based on outline_variant, with alpha
+		state_bg_hover: "#C4C6D044",
+		state_bg_focus: "#C4C6D055",
+		state_bg_active: "#C4C6D066",
+		// Campaign colors
+		tuta_color_nota: red_nota,
+		content_accent_tuta_bday: dark_purple,
+		content_accent_secondary_tuta_bday: light_purple,
+		content_bg_tuta_bday: dark,
 	})
 	const darkBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "dark" : "dark_secondary",
 		logo: getLogo(true, isCalendarApp),
-		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: light_purple,
-		content_accent_secondary_tuta_bday: dark_purple,
-		content_bg_tuta_bday: light_white,
 		// Basic color tokens
 		primary: "#ACC7FF",
 		on_primary: "#0E2F60",
@@ -248,6 +250,15 @@ export const themes = (): Themes => {
 		experimental_tertiary: BLUE_FIGHTER,
 		highlight_bg: highlight,
 		highlight_fg: black,
+		// state colors; based on outline_variant, with alpha
+		state_bg_hover: "#44474E77",
+		state_bg_focus: "#44474E99",
+		state_bg_active: "#44474EAA",
+		// Campaign colors
+		tuta_color_nota: red_nota,
+		content_accent_tuta_bday: light_purple,
+		content_accent_secondary_tuta_bday: dark_purple,
+		content_bg_tuta_bday: light_white,
 	})
 
 	return {
