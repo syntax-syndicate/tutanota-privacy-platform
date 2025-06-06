@@ -145,7 +145,7 @@ export class MailFolderRow implements Component<MailFolderRowAttrs> {
 	}
 
 	private renderHierarchyLine({ indentationLevel, numberOfPreviousRows, isLastSibling, onSelectedPath }: MailFolderRowAttrs, indentationMargin: number) {
-		const lineSize = 2
+		const lineSize = 1
 		const border = `${lineSize}px solid ${theme.outline}`
 		const verticalOffsetInsideRow = size.button_height / 2 + 1
 		const verticalOffsetForParent = (size.button_height - size.icon_size_large) / 2
