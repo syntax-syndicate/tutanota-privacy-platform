@@ -731,7 +731,7 @@ styles.registerStyle("main", () => {
 			"pointer-events": "none",
 		},
 		".content-message-bg": {
-			"background-color": theme.on_surface_fade,
+			"background-color": theme.on_surface_variant,
 		},
 		".elevated-bg": {
 			"background-color": getElevatedBackground(),
@@ -2503,7 +2503,7 @@ styles.registerStyle("main", () => {
 		".custom-color-container .inputWrapper:before": {
 			// slash in content is content alt. so that it's ignored by screen readers
 			content: '"#" / ""',
-			color: theme.on_surface_fade,
+			color: theme.on_surface_variant,
 		},
 		".calendar-invite-field": {
 			"min-width": "80px",
@@ -2776,7 +2776,7 @@ styles.registerStyle("main", () => {
 			color: theme.on_surface_variant,
 		},
 		".faded-text": {
-			color: theme.on_surface_fade,
+			color: theme.on_surface_variant,
 		},
 		".svg-text-content-bg text": {
 			fill: theme.surface,
