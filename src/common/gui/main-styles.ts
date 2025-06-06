@@ -8,6 +8,7 @@ import { getElevatedBackground, getNavigationMenuBg, theme } from "./theme"
 import { FontIcons } from "./base/icons/FontIcons.js"
 import { DefaultAnimationTime } from "./animation/Animations.js"
 import { locator } from "../api/main/CommonLocator.js"
+import { on_secondary_fixed, secondary_fixed } from "./builtinThemes.js"
 
 assertMainOrNode()
 
@@ -2998,8 +2999,8 @@ styles.registerStyle("main", () => {
 		},
 		".search-highlight": {
 			"font-weight": "bold",
-			"background-color": theme.highlight_bg,
-			color: theme.highlight_fg,
+			"background-color": secondary_fixed,
+			color: on_secondary_fixed,
 			"border-radius": "3px",
 		},
 	}

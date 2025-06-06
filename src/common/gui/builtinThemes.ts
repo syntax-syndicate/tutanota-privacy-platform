@@ -8,51 +8,30 @@ import { client } from "../misc/ClientDetector.js"
 
 assertMainOrNodeBoot()
 
-/**
- * semantic colors light as defined in Figma primitives
- */
-const SONNE = "#FFCB00"
-/**
- * semantic colors dark as defined in Figma primitives
- */
-const SONNE_70 = "#FFECB7"
-/**
- * Highlight color
- */
-const highlight = "#FFDDB2"
-
-// Base color name
+// FIXME: Base color name
 const PEACH = "#FFF2EA"
 const DARK_PEACH = "#C9C6C5"
 const RED_DUNKEL = "#410002"
 const RED_FIGHTER = "#D93951"
-
 const BLUE_DUNKEL = "#001641"
 const BLUE_FIGHTER = "#0040FF"
-
-/**
- *      light theme background
- */
-const light_white = "#ffffff"
-const red = "#850122"
-const secondary_red = "#FF2222"
-const red_nota = "#d93951"
-const dunkel = "#410002"
-const blue = "#003E85"
-const secondary_blue = "#4282FF"
-const dark_purple = "#AC3E80"
-const light_purple = "#FCBFDE"
-
-const dark_lighter_0 = "#232323"
-const dark = "#222222"
-const logo_text_bright_grey = "#c5c7c7"
-const black = "#000000"
 
 // Secondary colors
 export const secondary_fixed = "#FFDDB2"
 export const on_secondary_fixed = "#291800"
 
-export const logoDefaultGrey = logo_text_bright_grey
+/**
+ * FIXME: logo related colors
+ */
+const red = "#850122"
+const secondary_red = "#FF2222"
+const dunkel = "#410002"
+const blue = "#003E85"
+const secondary_blue = "#4282FF"
+const dark_lighter_0 = "#232323"
+const logo_text_bright_grey = "#c5c7c7"
+const black = "#000000"
+export const logoDefaultGrey = "#c5c7c7"
 export const tutaRed = red
 export const tutaDunkel = dunkel
 
@@ -116,17 +95,15 @@ export const themes = (): Themes => {
 		experimental_primary_container: PEACH,
 		experimental_on_primary_container: RED_DUNKEL,
 		experimental_tertiary: RED_FIGHTER,
-		highlight_bg: highlight,
-		highlight_fg: black,
 		// state colors; based on outline_variant, with alpha
 		state_bg_hover: "#D7C1C144",
 		state_bg_focus: "#D7C1C155",
 		state_bg_active: "#D7C1C166",
 		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: dark_purple,
-		content_accent_secondary_tuta_bday: light_purple,
-		content_bg_tuta_bday: dark,
+		tuta_color_nota: "#d93951",
+		content_accent_tuta_bday: "#AC3E80",
+		content_accent_secondary_tuta_bday: "#FCBFDE",
+		content_bg_tuta_bday: "#222222",
 	})
 	const darkRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "dark" : "dark_secondary",
@@ -160,17 +137,15 @@ export const themes = (): Themes => {
 		experimental_primary_container: DARK_PEACH,
 		experimental_on_primary_container: dark_lighter_0,
 		experimental_tertiary: RED_FIGHTER,
-		highlight_bg: highlight,
-		highlight_fg: black,
 		// state colors; based on outline_variant, with alpha
 		state_bg_hover: "#52434377",
 		state_bg_focus: "#52434399",
 		state_bg_active: "#524343AA",
 		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: light_purple,
-		content_accent_secondary_tuta_bday: dark_purple,
-		content_bg_tuta_bday: light_white,
+		tuta_color_nota: "#d93951",
+		content_accent_tuta_bday: "#FCBFDE",
+		content_accent_secondary_tuta_bday: "#AC3E80",
+		content_bg_tuta_bday: "#ffffff",
 	})
 	const lightBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "light" : "light_secondary",
@@ -204,17 +179,15 @@ export const themes = (): Themes => {
 		experimental_primary_container: PEACH,
 		experimental_on_primary_container: BLUE_DUNKEL,
 		experimental_tertiary: BLUE_FIGHTER,
-		highlight_bg: highlight,
-		highlight_fg: black,
 		// state colors; based on outline_variant, with alpha
 		state_bg_hover: "#C4C6D044",
 		state_bg_focus: "#C4C6D055",
 		state_bg_active: "#C4C6D066",
 		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: dark_purple,
-		content_accent_secondary_tuta_bday: light_purple,
-		content_bg_tuta_bday: dark,
+		tuta_color_nota: "#d93951",
+		content_accent_tuta_bday: "#AC3E80",
+		content_accent_secondary_tuta_bday: "#FCBFDE",
+		content_bg_tuta_bday: "#222222",
 	})
 	const darkBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "dark" : "dark_secondary",
@@ -248,17 +221,15 @@ export const themes = (): Themes => {
 		experimental_primary_container: DARK_PEACH,
 		experimental_on_primary_container: dark_lighter_0,
 		experimental_tertiary: BLUE_FIGHTER,
-		highlight_bg: highlight,
-		highlight_fg: black,
 		// state colors; based on outline_variant, with alpha
 		state_bg_hover: "#44474E77",
 		state_bg_focus: "#44474E99",
 		state_bg_active: "#44474EAA",
 		// Campaign colors
-		tuta_color_nota: red_nota,
-		content_accent_tuta_bday: light_purple,
-		content_accent_secondary_tuta_bday: dark_purple,
-		content_bg_tuta_bday: light_white,
+		tuta_color_nota: "#d93951",
+		content_accent_tuta_bday: "#FCBFDE",
+		content_accent_secondary_tuta_bday: "#AC3E80",
+		content_bg_tuta_bday: "#ffffff",
 	})
 
 	return {

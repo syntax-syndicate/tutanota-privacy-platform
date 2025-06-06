@@ -58,8 +58,6 @@ export type Theme = {
 	content_accent_tuta_bday: string
 	content_accent_secondary_tuta_bday: string
 	tuta_color_nota: string
-	highlight_bg: string
-	highlight_fg: string
 	// Experimental colors; using material 3 color tokens which will be introduced in the future
 	experimental_primary_container: string
 	experimental_on_primary_container: string
