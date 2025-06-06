@@ -1,7 +1,5 @@
 import { assertMainOrNodeBoot } from "../api/common/Env"
 import { isColorLight } from "./base/Color"
-import { logoDefaultGrey, tutaDunkel, tutaRed } from "./builtinThemes"
-import { getTutaLogoSvg } from "./base/Logo.js"
 
 assertMainOrNodeBoot()
 
@@ -54,8 +52,17 @@ export type Theme = {
 	content_accent_secondary_tuta_bday: string
 	tuta_color_nota: string
 	// Experimental colors; using material 3 color tokens which will be introduced in the future
+	/**
+	 * @deprecated Use not experimental color tokens instead.
+	 */
 	experimental_primary_container: string
+	/**
+	 * @deprecated Use not experimental color tokens instead.
+	 */
 	experimental_on_primary_container: string
+	/**
+	 * @deprecated Use not experimental color tokens instead.
+	 */
 	experimental_tertiary: string
 }
 
@@ -98,14 +105,4 @@ export function getElevatedBackground(): string {
 
 export function getNavigationMenuBg(): string {
 	return isColorLight(theme.surface) ? theme.surface_container_high : theme.surface
-}
-
-export function getLightOrDarkTutaLogo(isCalendarApp: boolean): string {
-	// Use tuta logo with our brand colors
-	const isCalendarTheme = (theme.themeId === "light" && isCalendarApp) || (theme.themeId === "light_secondary" && !isCalendarApp)
-	if (isColorLight(theme.surface) && !isCalendarTheme) {
-		return getTutaLogoSvg(tutaRed, tutaDunkel)
-	} else {
-		return getTutaLogoSvg(logoDefaultGrey, logoDefaultGrey)
-	}
 }

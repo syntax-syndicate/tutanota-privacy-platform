@@ -1,10 +1,9 @@
 /**
  * @file color/theme definitions for default themes.
  */
-import { getCalendarLogoSvg, getMailLogoSvg, getTutaLogoSvg } from "./base/Logo"
 import type { Theme, ThemeId } from "./theme"
-import { assertMainOrNodeBoot, isApp } from "../api/common/Env"
-import { client } from "../misc/ClientDetector.js"
+import { assertMainOrNodeBoot } from "../api/common/Env"
+import { getAppLogo } from "./base/Logo.js"
 
 assertMainOrNodeBoot()
 
@@ -20,37 +19,9 @@ const BLUE_FIGHTER = "#0040FF"
 export const secondary_fixed = "#FFDDB2"
 export const on_secondary_fixed = "#291800"
 
-/**
- * FIXME: logo related colors
- */
-const red = "#850122"
-const secondary_red = "#FF2222"
-const dunkel = "#410002"
-const blue = "#003E85"
-const secondary_blue = "#4282FF"
 const dark_lighter_0 = "#232323"
-const logo_text_bright_grey = "#c5c7c7"
-const black = "#000000"
-export const logoDefaultGrey = "#c5c7c7"
-export const tutaRed = red
-export const tutaDunkel = dunkel
 
 type Themes = Record<ThemeId, Theme>
-
-const getLogo = (isDark: boolean, isDefault: boolean) => {
-	const isDarkOrDefault = isDark || !isDefault
-	if (!isApp()) {
-		return isDarkOrDefault ? getTutaLogoSvg("#c4c4c4", "#c4c4c4") : getTutaLogoSvg(red, dunkel)
-	}
-
-	if (client.isCalendarApp()) {
-		return isDarkOrDefault
-			? getCalendarLogoSvg(logo_text_bright_grey, logo_text_bright_grey, logo_text_bright_grey)
-			: getCalendarLogoSvg(blue, secondary_blue, black)
-	}
-
-	return isDarkOrDefault ? getMailLogoSvg(logo_text_bright_grey, logo_text_bright_grey, logo_text_bright_grey) : getMailLogoSvg(red, secondary_red, black)
-}
 
 /**
  * Color token definitions for each built-in theme.
@@ -62,10 +33,11 @@ const getLogo = (isDark: boolean, isDefault: boolean) => {
  * https://m3.material.io/styles/color/advanced/define-new-colors#baed14ce-4be8-46aa-8223-ace5d45af005
  */
 export const themes = (): Themes => {
-	const isCalendarApp = client.isCalendarApp()
+	// const isCalendarApp = client.isCalendarApp()
+	const isCalendarApp = false
 	const lightRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "light" : "light_secondary",
-		logo: getLogo(false, !isCalendarApp),
+		logo: getAppLogo(isCalendarApp ? "#D7C1C1AA" : undefined),
 		// Basic color tokens
 		primary: "#8F4A4E",
 		on_primary: "#FFFFFF",
@@ -106,7 +78,7 @@ export const themes = (): Themes => {
 	})
 	const darkRed = Object.freeze<Theme>({
 		themeId: !isCalendarApp ? "dark" : "dark_secondary",
-		logo: getLogo(true, !isCalendarApp),
+		logo: getAppLogo("#9F8C8CAA"),
 		// Basic color tokens
 		primary: "#FFB3B5",
 		on_primary: "#561D22",
@@ -147,7 +119,7 @@ export const themes = (): Themes => {
 	})
 	const lightBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "light" : "light_secondary",
-		logo: getLogo(false, isCalendarApp),
+		logo: getAppLogo(isCalendarApp ? undefined : "#C4C6D0EE"),
 		// Basic color tokens
 		primary: "#435E91",
 		on_primary: "#FFFFFF",
@@ -188,7 +160,7 @@ export const themes = (): Themes => {
 	})
 	const darkBlue = Object.freeze<Theme>({
 		themeId: isCalendarApp ? "dark" : "dark_secondary",
-		logo: getLogo(true, isCalendarApp),
+		logo: getAppLogo("#8e9099AA"),
 		// Basic color tokens
 		primary: "#ACC7FF",
 		on_primary: "#0E2F60",

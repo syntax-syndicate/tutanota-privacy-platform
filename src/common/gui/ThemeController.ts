@@ -6,7 +6,7 @@ import { assertMainOrNodeBoot, isApp, isDesktop } from "../api/common/Env"
 import { downcast, findAndRemove, LazyLoaded, mapAndFilterNull, typedValues } from "@tutao/tutanota-utils"
 import m from "mithril"
 import { BaseThemeId, Theme, ThemeId, ThemePreference } from "./theme"
-import { logoDefaultGrey, themes } from "./builtinThemes"
+import { themes } from "./builtinThemes"
 import { getWhitelabelCustomizations, ThemeCustomizations } from "../misc/WhitelabelCustomizations"
 import { getCalendarLogoSvg, getMailLogoSvg } from "./base/Logo"
 import { ThemeFacade } from "../native/common/generatedipc/ThemeFacade"
@@ -293,10 +293,8 @@ export class ThemeController {
 			// This is a whitelabel theme where logo has not been overwritten.
 			// Generate a logo with muted colors. We do not want to color our logo in
 			// some random color.
-			const grayedLogo =
-				this.app === AppType.Calendar
-					? getCalendarLogoSvg(logoDefaultGrey, logoDefaultGrey, logoDefaultGrey)
-					: getMailLogoSvg(logoDefaultGrey, logoDefaultGrey, logoDefaultGrey)
+			const logoDefaultGrey = "#c5c7c7"
+			const grayedLogo = this.app === AppType.Calendar ? getCalendarLogoSvg(logoDefaultGrey) : getMailLogoSvg(logoDefaultGrey)
 			return { ...themeWithoutLogo, ...{ logo: grayedLogo } }
 		}
 	}
