@@ -1401,6 +1401,9 @@ styles.registerStyle("main", () => {
 			// undoing our default button styling
 			opacity: "1 !important",
 		},
+		".state-bg.selected": {
+			background: theme.state_bg_focus,
+		},
 		// Only enable hover for mouse and keyboard navigation (not touch) because
 		// :hover will bet stuck after the touch on mobile.
 		// Use :where() to not count towards specificity, otherwise this is more specific

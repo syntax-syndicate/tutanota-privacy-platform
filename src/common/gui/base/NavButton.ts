@@ -111,14 +111,15 @@ export class NavButton implements Component<NavButtonAttrs> {
 	}
 
 	createButtonAttributes(a: NavButtonAttrs): RouteLinkAttrs {
+		const hasFocus = this._draggedOver || (isNavButtonSelected(a) && !a.disableSelectedBackground)
 		let attr: RouteLinkAttrs = {
 			role: "button",
 			// role button for screen readers
 			href: this._getUrl(a.href),
 			style: {
 				"font-size": a.fontSize ? px(a.fontSize) : "",
-				background: this._draggedOver || (isNavButtonSelected(a) && !a.disableSelectedBackground) ? theme.state_bg_hover : "transparent",
 				color: this._draggedOver || isNavButtonSelected(a) ? theme.primary : theme.on_surface_variant,
+				...(hasFocus && { background: theme.state_bg_focus }),
 			},
 			title: lang.getTranslationText(a.label),
 			target: this._isExternalUrl(a.href) ? "_blank" : undefined,
