@@ -157,6 +157,7 @@ import "./api/worker/search/OfflineStorageContactIndexerBackendTest.js"
 import "./api/worker/search/OfflineStorageContactSearchFacadeTest.js"
 import "./api/worker/rest/CustomUserCacheHandlerTest.js"
 import "./api/common/utils/QueryTokenUtilsTest.js"
+import "./api/worker/offline/PatchMergerTest.js"
 import "./contacts/ContactModelTest.js"
 import "./api/worker/search/OfflinestorageIndexerTest.js"
 

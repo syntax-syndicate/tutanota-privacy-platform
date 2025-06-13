@@ -471,6 +471,7 @@ export async function computePatches(
 				})
 				patches = patches.concat(items)
 			}
+
 			if (modelAssociation.cardinality == Cardinality.Any) {
 				if (removedItems.length > 0) {
 					const removedAggregateIds = removedItems.map(
@@ -503,12 +504,15 @@ export async function computePatches(
 					}),
 				)
 			} else {
+				// originalAggergations: ZeroOrOne: [apple]
+				// modifierAgg: ZeroOne: []
+
 				// ZeroOrOne or One with original aggregation on server already there (i.e. it is a list of one)
 				const aggregateId = AttributeModel.getAttribute(assertNotNull(originalAggregatedEntities[0]), "_id", aggregateTypeModel)
 				const fullPath = `${attributeIdStr}/${aggregateId}/`
 				const items = await computePatches(
 					originalAggregatedEntities[0],
-					modifiedAggregatedEntities[0],
+					assertNotNull(modifiedAggregatedEntities[0]),
 					modifiedAggregatedUntypedEntities[0],
 					aggregateTypeModel,
 					typeReferenceResolver,
