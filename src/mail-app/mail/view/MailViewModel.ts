@@ -676,6 +676,9 @@ export class MailViewModel {
 						instanceListId: importedFolder.entries,
 						operation: OperationType.CREATE,
 						typeRef: MailSetEntryTypeRef,
+						instance: null,
+						patches: null,
+						isPrefetched: false,
 					})
 				})
 			}

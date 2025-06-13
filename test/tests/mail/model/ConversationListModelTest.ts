@@ -50,6 +50,10 @@ o.spec("ConversationListModel", () => {
 		mailGroup: createTestEntity(GroupTypeRef),
 		mailboxGroupRoot: createTestEntity(MailboxGroupRootTypeRef),
 	}
+	const noPatchesAndInstance: Pick<EntityUpdateData, "instance" | "patches"> = {
+		instance: null,
+		patches: null,
+	}
 
 	const mailSetEntriesListId = "entries"
 	const _ownerGroup = "me"
@@ -365,6 +369,9 @@ o.spec("ConversationListModel", () => {
 			instanceListId: listIdPart(mailSetEntryId),
 			instanceId: elementIdPart(mailSetEntryId),
 			operation: OperationType.CREATE,
+			instance: null,
+			patches: null,
+			isPrefetched: false,
 		}
 
 		when(entityClient.load(MailSetEntryTypeRef, mailSetEntryId)).thenResolve(
@@ -407,6 +414,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: getListId(labels[1]),
 				instanceId: getElementId(labels[1]),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			entityUpdateData.operation = OperationType.UPDATE
@@ -427,6 +436,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: getListId(labels[1]),
 				instanceId: getElementId(labels[1]),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 			entityUpdateData.operation = OperationType.DELETE
 
@@ -445,6 +456,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: listIdPart(someMail.mailSetEntryId),
 				instanceId: elementIdPart(someMail.mailSetEntryId),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			const oldItems = model.mails
@@ -482,6 +495,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: getListId(newEntry),
 				instanceId: getElementId(newEntry),
 				operation: OperationType.CREATE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			when(entityClient.load(MailSetEntryTypeRef, newEntry._id)).thenResolve(newEntry)
@@ -565,6 +580,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: mailSetEntriesListId,
 				instanceId: makeMailSetElementId(0),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			o(model.mails).deepEquals(oldMails)
@@ -590,6 +607,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: mailSetEntriesListId,
 				instanceId: makeMailSetElementId(2),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			o(model.mails).deepEquals(oldMails)
@@ -615,6 +634,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: mailSetEntriesListId,
 				instanceId: makeMailSetElementId(1),
 				operation: OperationType.DELETE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 
 			o(model.mails).deepEquals(oldMails)
@@ -651,6 +672,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: getListId(mail),
 				instanceId: getElementId(mail),
 				operation: OperationType.UPDATE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 			when(entityClient.load(MailTypeRef, mail._id)).thenResolve(mail)
 
@@ -669,6 +692,8 @@ o.spec("ConversationListModel", () => {
 				instanceListId: getListId(mail),
 				instanceId: getElementId(mail),
 				operation: OperationType.UPDATE,
+				...noPatchesAndInstance,
+				isPrefetched: false,
 			}
 			when(entityClient.load(MailTypeRef, mail._id)).thenResolve(mail)
 			entityUpdateData.operation = OperationType.DELETE
