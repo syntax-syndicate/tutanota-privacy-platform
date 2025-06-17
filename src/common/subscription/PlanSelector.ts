@@ -4,7 +4,7 @@ import { PaidPlanBox } from "./PaidPlanBox.js"
 import { PaymentInterval, PriceAndConfigProvider } from "./PriceUtils"
 import { SelectedSubscriptionOptions } from "./FeatureListProvider"
 import { lazy } from "@tutao/tutanota-utils"
-import { PlanType } from "../api/common/TutanotaConstants.js"
+import { AvailablePlanType, PlanType } from "../api/common/TutanotaConstants.js"
 import { px, size } from "../gui/size.js"
 import { LoginButton, LoginButtonAttrs, LoginButtonType } from "../gui/base/buttons/LoginButton.js"
 import Stream from "mithril/stream"
@@ -22,12 +22,15 @@ type PlanSelectorAttr = {
 	actionButtons: SubscriptionActionButtons
 	priceAndConfigProvider: PriceAndConfigProvider
 	hasCampaign: boolean
-	hidePaidPlans: boolean
+	availablePlans: AvailablePlanType[]
 	isApplePrice: boolean
+	currentPlan?: PlanType
+	allowSwitchingPaymentInterval: boolean
+	showMultiUser: boolean
 }
 
 export class PlanSelector implements Component<PlanSelectorAttr> {
-	private readonly currentPlan: Stream<AvailablePlans> = stream(PlanType.Revolutionary)
+	private readonly selectedPlan: Stream<AvailablePlans> = stream(PlanType.Revolutionary)
 	private readonly shouldFixButtonPos: Stream<boolean> = stream(false)
 
 	/**
@@ -44,15 +47,20 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 		[PlanType.Free]: "initial",
 	}
 
-	oncreate({ attrs: { hidePaidPlans } }: Vnode<PlanSelectorAttr>) {
-		// Set the default selection to free when we need to hide paid plans. This would be the case if the user already has a paid Apple account.
-		if (hidePaidPlans) this.currentPlan(PlanType.Free)
+	oncreate({ attrs: { availablePlans, currentPlan } }: Vnode<PlanSelectorAttr>) {
+		if (availablePlans.includes(PlanType.Free) && availablePlans.length === 1) {
+			// Only Free plan is available. This would be the case if the user already has a paid Apple account.
+			this.selectedPlan(PlanType.Free)
+		} else if ((!availablePlans.includes(PlanType.Revolutionary) && availablePlans.includes(PlanType.Legend)) || currentPlan === PlanType.Revolutionary) {
+			// Only Legend plan is available or the current plan is Revolutionary
+			this.selectedPlan(PlanType.Legend)
+		}
 
 		// Set the scale of the selected plan box to `1.03` after a timeout to animate the scale of the selected plan box on loading.
 		this.scaleTimeout = setTimeout(() => {
 			this.scale = { ...this.scale, [PlanType.Revolutionary]: SELECTED_PLAN_SCALE.toString() }
 			// Subscribe to the current plan to update the scale of the selected plan box when the user selects a different plan.
-			this.currentPlan.map(this.scaleCurrentPlan)
+			this.selectedPlan.map(this.scaleCurrentPlan)
 		}, 500)
 
 		this.handleResize()
@@ -70,8 +78,24 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 		windowFacade.removeResizeListener(this.handleResize)
 	}
 
-	view({ attrs: { options, priceAndConfigProvider, actionButtons, hasCampaign, hidePaidPlans, isApplePrice } }: Vnode<PlanSelectorAttr>): Children {
+	view({
+		attrs: {
+			options,
+			priceAndConfigProvider,
+			actionButtons,
+			availablePlans,
+			hasCampaign,
+			isApplePrice,
+			currentPlan,
+			allowSwitchingPaymentInterval,
+			showMultiUser,
+		},
+	}: Vnode<PlanSelectorAttr>): Children {
+		console.log("currentPlan", currentPlan)
+
 		const isYearly = options.paymentInterval() === PaymentInterval.Yearly
+		const isPaidPlanSelected = this.selectedPlan() === PlanType.Revolutionary || this.selectedPlan() === PlanType.Legend
+		const hidePaidPlans = availablePlans.includes(PlanType.Free) && availablePlans.length === 1
 
 		const renderFootnoteElement = (): Children => {
 			const getRevoPriceStrProps = {
@@ -110,7 +134,7 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 				// The label text for go european campaign shall not be translated.
 				label: "continue_action",
 				type: LoginButtonType.FullWidth,
-				onclick: (event, dom) => actionButtons[this.currentPlan() as AvailablePlans]().onclick(event, dom),
+				onclick: (event, dom) => actionButtons[this.selectedPlan() as AvailablePlans]().onclick(event, dom),
 				...(hasCampaign && {
 					// As we modify the size of the Login button for the campaign, the normal "Continue" button should have the same size to avoid layout shifting
 					class: "go-european-button",
@@ -153,9 +177,9 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 			[
 				m(
 					"#plan-selector.flex.flex-column.gap-vpad-l",
-					!hidePaidPlans && renderPaymentIntervalSwitch(),
+					!hidePaidPlans && allowSwitchingPaymentInterval && renderPaymentIntervalSwitch(),
 					m(
-						".flex-column",
+						`.flex-column${allowSwitchingPaymentInterval ? "" : ".mt"}`,
 						{
 							"data-testid": "dialog:select-subscription",
 							style: {
@@ -182,10 +206,10 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 								},
 							},
 							!hidePaidPlans &&
-								[PlanType.Revolutionary, PlanType.Legend].map((personalPlan: PlanType.Legend | PlanType.Revolutionary) => {
+								[PlanType.Revolutionary, PlanType.Legend].map((plan: PlanType.Legend | PlanType.Revolutionary) => {
 									const getPriceStrProps = {
 										priceAndConfigProvider,
-										targetPlan: personalPlan,
+										targetPlan: plan,
 										paymentInterval: options.paymentInterval(),
 									}
 									const { referencePriceStr, priceStr } = isApplePrice ? getApplePriceStr(getPriceStrProps) : getPriceStr(getPriceStrProps)
@@ -193,20 +217,28 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 									return m(PaidPlanBox, {
 										price: priceStr,
 										referencePrice: referencePriceStr,
-										plan: personalPlan,
-										isSelected: personalPlan === this.currentPlan(),
-										onclick: (newPlan) => this.currentPlan(newPlan),
-										scale: this.scale[personalPlan],
+										plan,
+										isSelected: plan === this.selectedPlan(),
+										isDisabled:
+											(plan === PlanType.Revolutionary && !availablePlans.includes(PlanType.Revolutionary)) ||
+											(plan === PlanType.Legend && !availablePlans.includes(PlanType.Legend)) ||
+											currentPlan === plan,
+										isCurrentPlan: currentPlan === plan,
+										onclick: (newPlan) => this.selectedPlan(newPlan),
+										scale: this.scale[plan],
 										selectedPaymentInterval: options.paymentInterval,
 										priceAndConfigProvider,
 										hasCampaign,
 										isApplePrice,
+										showMultiUser,
 									})
 								}),
 						),
 						m(FreePlanBox, {
-							isSelected: this.currentPlan() === PlanType.Free,
-							select: () => this.currentPlan(PlanType.Free),
+							isSelected: this.selectedPlan() === PlanType.Free,
+							isDisabled: !availablePlans.includes(PlanType.Free) || currentPlan === PlanType.Free,
+							isCurrentPlan: currentPlan === PlanType.Free,
+							select: () => this.selectedPlan(PlanType.Free),
 							priceAndConfigProvider,
 							scale: this.scale[PlanType.Free],
 							hasCampaign,

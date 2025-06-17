@@ -44,18 +44,28 @@ import { MobilePaymentError } from "../api/common/error/MobilePaymentError.js"
 import { mailLocator } from "../../mail-app/mailLocator"
 import { client } from "../misc/ClientDetector.js"
 import { SubscriptionApp } from "./SubscriptionViewer.js"
+import { PlanSelector } from "./PlanSelector.js"
+import { getPrivateBusinessSwitchButton } from "./VariantCSubscriptionPage.js"
 
 /**
  * Allows cancelling the subscription (only private use) and switching the subscription to a different paid subscription.
  * Note: Only shown if the user is already a Premium user.
  */
-export async function showSwitchDialog(
-	customer: Customer,
-	accountingInfo: AccountingInfo,
-	lastBooking: Booking,
-	acceptedPlans: AvailablePlanType[],
-	reason: MaybeTranslation | null,
-): Promise<void> {
+export async function showSwitchDialog({
+	customer,
+	accountingInfo,
+	lastBooking,
+	acceptedPlans,
+	reason,
+	useNewPlanSelector = false,
+}: {
+	customer: Customer
+	accountingInfo: AccountingInfo
+	lastBooking: Booking
+	acceptedPlans: AvailablePlanType[]
+	reason: MaybeTranslation | null
+	useNewPlanSelector?: boolean
+}): Promise<void> {
 	if (hasRunningAppStoreSubscription(accountingInfo) && !isIOSApp()) {
 		await showManageThroughAppStoreDialog()
 		return
@@ -73,6 +83,16 @@ export async function showSwitchDialog(
 		dialog.close()
 	}
 
+	const currentPlanInfo = model.currentPlanInfo
+	const businessUse = stream(currentPlanInfo.businessUse)
+	const paymentInterval = stream(PaymentInterval.Yearly) // always default to yearly
+	const options = { businessUse, paymentInterval }
+	const multipleUsersAllowed = model.multipleUsersStillSupportedLegacy()
+
+	if (currentPlanInfo.planType != null && LegacyPlans.includes(currentPlanInfo.planType)) {
+		reason = "currentPlanDiscontinued_msg"
+	}
+
 	const headerBarAttrs: DialogHeaderBarAttrs = {
 		left: [
 			{
@@ -81,37 +101,53 @@ export async function showSwitchDialog(
 				type: ButtonType.Secondary,
 			},
 		],
-		right: [],
+		right: [getPrivateBusinessSwitchButton(businessUse)],
 		middle: "subscription_label",
 	}
-	const currentPlanInfo = model.currentPlanInfo
-	const businessUse = stream(currentPlanInfo.businessUse)
-	const paymentInterval = stream(PaymentInterval.Yearly) // always default to yearly
-	const multipleUsersAllowed = model.multipleUsersStillSupportedLegacy()
 
 	const dialog: Dialog = Dialog.largeDialog(headerBarAttrs, {
-		view: () =>
-			m(
+		view: () => {
+			// Need to reassign the right button to update the label
+			headerBarAttrs.right = [getPrivateBusinessSwitchButton(businessUse)]
+			if (businessUse()) {
+				return m(".pt", [
+					m(SubscriptionSelector, {
+						options,
+						priceInfoTextId: priceAndConfigProvider.getPriceInfoMessage(),
+						boxWidth: 230,
+						boxHeight: 270,
+						acceptedPlans: NewBusinessPlans.filter((businessPlan) => acceptedPlans.includes(businessPlan)),
+						// FIXME: In which situation we need to hide the payment interval switch?
+						allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
+						currentPlanType: currentPlanInfo.planType,
+						actionButtons: subscriptionActionButtons,
+						featureListProvider: featureListProvider,
+						priceAndConfigProvider,
+						multipleUsersAllowed,
+						msg: reason,
+						accountingInfo: accountingInfo,
+					}),
+				])
+			}
+
+			return m(
 				".pt",
-				m(SubscriptionSelector, {
-					options: {
-						businessUse,
-						paymentInterval: paymentInterval,
-					},
-					priceInfoTextId: priceAndConfigProvider.getPriceInfoMessage(),
-					msg: reason,
-					boxWidth: 230,
-					boxHeight: 270,
-					acceptedPlans: acceptedPlans,
-					currentPlanType: currentPlanInfo.planType,
-					accountingInfo,
-					allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
+				// Headline for general messages
+				reason && m(".flex-center.items-center.gap-hpad.mb", m(".b.center.smaller", lang.getTranslationText(reason))),
+				m(PlanSelector, {
+					options,
 					actionButtons: subscriptionActionButtons,
-					featureListProvider: featureListProvider,
 					priceAndConfigProvider,
-					multipleUsersAllowed,
+					// hasCampaign: hasCampaign && data.options.paymentInterval() === PaymentInterval.Yearly,
+					hasCampaign: false,
+					availablePlans: acceptedPlans,
+					isApplePrice: false,
+					currentPlan: currentPlanInfo.planType,
+					allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
+					showMultiUser: multipleUsersAllowed,
 				}),
-			),
+			)
+		},
 	})
 		.addShortcut({
 			key: Keys.ESC,
@@ -188,7 +224,7 @@ async function onSwitchToFree(customer: Customer, dialog: Dialog, currentPlanInf
 	if (newPlanType === PlanType.Free) {
 		if (mailLocator.mailModel) {
 			// there is no mailLocator for the calendar app
-			for (const importedMailSet of mailLocator.mailModel.getImportedMailSets()) mailLocator.mailModel.finallyDeleteCustomMailFolder(importedMailSet)
+			for (const importedMailSet of mailLocator.mailModel.getImportedMailSets()) void mailLocator.mailModel.finallyDeleteCustomMailFolder(importedMailSet)
 		}
 	}
 }
@@ -218,7 +254,7 @@ async function doSwitchToPaidPlan(
 		} catch (e) {
 			if (e instanceof MobilePaymentError) {
 				console.error("AppStore subscription failed", e)
-				Dialog.message("appStoreSubscriptionError_msg", e.message)
+				void Dialog.message("appStoreSubscriptionError_msg", e.message)
 			} else {
 				throw e
 			}
@@ -243,14 +279,14 @@ function createPlanButton(
 		label: "buy_action",
 		...(shouldApplyDiscount && { class: "go-european-button" }),
 		onclick: async () => {
-			// Show an extra dialog in the case that someone is upgrading from a legacy plan to a new plan because they can't revert.
 			if (
-				LegacyPlans.includes(currentPlanInfo.planType) &&
-				!(await Dialog.confirm(lang.getTranslation("upgradePlan_msg", { "{plan}": PlanTypeToName[targetSubscription] })))
+				await Dialog.confirm(lang.getTranslation("upgradePlan_msg", { "{plan}": PlanTypeToName[targetSubscription] }), "paymentDataValidation_action")
 			) {
-				return
+				await showProgressDialog(
+					"pleaseWait_msg",
+					doSwitchToPaidPlan(accountingInfo, newPaymentInterval(), targetSubscription, dialog, currentPlanInfo),
+				)
 			}
-			await showProgressDialog("pleaseWait_msg", doSwitchToPaidPlan(accountingInfo, newPaymentInterval(), targetSubscription, dialog, currentPlanInfo))
 		},
 	})
 }
