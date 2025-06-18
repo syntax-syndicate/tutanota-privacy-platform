@@ -503,6 +503,22 @@ export async function computePatches(
 						patchOperation: PatchOperationType.ADD_ITEM,
 					}),
 				)
+			} else if (isEmpty(modifiedAggregatedEntities)) {
+				// ZeroOrOne with modified aggregation on client is []
+				const aggregateIdAttributeId = assertNotNull(AttributeModel.getAttributeId(aggregateTypeModel, "_id"))
+				let aggregateIdAttributeIdStr = aggregateIdAttributeId.toString()
+				if (env.networkDebugging) {
+					// keys are in the format attributeId:attributeName when networkDebugging is enabled
+					aggregateIdAttributeIdStr += ":" + "_id"
+				}
+				const removedAggregateId = originalAggregatedEntities[0][aggregateIdAttributeId] as Id
+				patches.push(
+					createPatch({
+						attributePath: attributeIdStr,
+						value: JSON.stringify([removedAggregateId]),
+						patchOperation: PatchOperationType.REMOVE_ITEM,
+					}),
+				)
 			} else {
 				// originalAggergations: ZeroOrOne: [apple]
 				// modifierAgg: ZeroOne: []
@@ -511,7 +527,7 @@ export async function computePatches(
 				const aggregateId = AttributeModel.getAttribute(assertNotNull(originalAggregatedEntities[0]), "_id", aggregateTypeModel)
 				const fullPath = `${attributeIdStr}/${aggregateId}/`
 				const items = await computePatches(
-					originalAggregatedEntities[0],
+					assertNotNull(originalAggregatedEntities[0]),
 					assertNotNull(modifiedAggregatedEntities[0]),
 					modifiedAggregatedUntypedEntities[0],
 					aggregateTypeModel,
@@ -533,15 +549,6 @@ export async function computePatches(
 			// Only Any associations support ADD_ITEM and REMOVE_ITEM operations
 			// All cardinalities support REPLACE operation
 			if (modelAssociation.cardinality == Cardinality.Any) {
-				if (addedItems.length > 0) {
-					patches.push(
-						createPatch({
-							attributePath: attributeIdStr,
-							value: JSON.stringify(addedItems),
-							patchOperation: PatchOperationType.ADD_ITEM,
-						}),
-					)
-				}
 				if (removedItems.length > 0) {
 					patches.push(
 						createPatch({

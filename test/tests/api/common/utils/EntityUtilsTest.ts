@@ -549,9 +549,9 @@ o.spec("EntityUtils", function () {
 			)
 			o(objectDiff).deepEquals([
 				createPatch({
-					attributePath: "3/aggId/9/aggOnAggId/10",
-					value: null,
-					patchOperation: PatchOperationType.REPLACE,
+					attributePath: "3/aggId/10",
+					value: '["aggOnAggId"]',
+					patchOperation: PatchOperationType.REMOVE_ITEM,
 				}),
 			])
 		})
