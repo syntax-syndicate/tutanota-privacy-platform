@@ -396,6 +396,7 @@ export async function computePatches(
 			// keys are in the format attributeId:attributeName when networkDebugging is enabled
 			attributeIdStr += ":" + modelAssociation.name
 		}
+
 		if (modelAssociation.type == AssociationType.Aggregation) {
 			const appName = modelAssociation.dependency ?? typeModel.app
 			const typeId = modelAssociation.refTypeId
@@ -472,72 +473,27 @@ export async function computePatches(
 				patches = patches.concat(items)
 			}
 
-			if (modelAssociation.cardinality == Cardinality.Any) {
-				if (removedItems.length > 0) {
-					const removedAggregateIds = removedItems.map(
-						(instance) => instance[assertNotNull(AttributeModel.getAttributeId(aggregateTypeModel, "_id"))] as Id,
-					)
-					patches.push(
-						createPatch({
-							attributePath: attributeIdStr,
-							value: JSON.stringify(removedAggregateIds),
-							patchOperation: PatchOperationType.REMOVE_ITEM,
-						}),
-					)
-				}
-				if (addedItems.length > 0) {
-					patches.push(
-						createPatch({
-							attributePath: attributeIdStr,
-							value: JSON.stringify(addedItems),
-							patchOperation: PatchOperationType.ADD_ITEM,
-						}),
-					)
-				}
-			} else if (isEmpty(originalAggregatedEntities)) {
-				// ZeroOrOne with original aggregation on server is []
+			if (addedItems.length > 0) {
 				patches.push(
 					createPatch({
 						attributePath: attributeIdStr,
-						value: JSON.stringify(modifiedAggregatedUntypedEntities),
+						value: JSON.stringify(addedItems),
 						patchOperation: PatchOperationType.ADD_ITEM,
 					}),
 				)
-			} else if (isEmpty(modifiedAggregatedEntities)) {
-				// ZeroOrOne with modified aggregation on client is []
-				const aggregateIdAttributeId = assertNotNull(AttributeModel.getAttributeId(aggregateTypeModel, "_id"))
-				let aggregateIdAttributeIdStr = aggregateIdAttributeId.toString()
-				if (env.networkDebugging) {
-					// keys are in the format attributeId:attributeName when networkDebugging is enabled
-					aggregateIdAttributeIdStr += ":" + "_id"
-				}
-				const removedAggregateId = originalAggregatedEntities[0][aggregateIdAttributeId] as Id
+			}
+
+			if (removedItems.length > 0) {
+				const removedAggregateIds = removedItems.map(
+					(instance) => instance[assertNotNull(AttributeModel.getAttributeId(aggregateTypeModel, "_id"))] as Id,
+				)
 				patches.push(
 					createPatch({
 						attributePath: attributeIdStr,
-						value: JSON.stringify([removedAggregateId]),
+						value: JSON.stringify(removedAggregateIds),
 						patchOperation: PatchOperationType.REMOVE_ITEM,
 					}),
 				)
-			} else {
-				// originalAggergations: ZeroOrOne: [apple]
-				// modifierAgg: ZeroOne: []
-
-				// ZeroOrOne or One with original aggregation on server already there (i.e. it is a list of one)
-				const aggregateId = AttributeModel.getAttribute(assertNotNull(originalAggregatedEntities[0]), "_id", aggregateTypeModel)
-				const fullPath = `${attributeIdStr}/${aggregateId}/`
-				const items = await computePatches(
-					assertNotNull(originalAggregatedEntities[0]),
-					assertNotNull(modifiedAggregatedEntities[0]),
-					modifiedAggregatedUntypedEntities[0],
-					aggregateTypeModel,
-					typeReferenceResolver,
-					isNetworkDebuggingEnabled,
-				)
-				items.map((item) => {
-					item.attributePath = fullPath + item.attributePath
-				})
-				patches = patches.concat(items)
 			}
 		} else {
 			// non aggregation associations
