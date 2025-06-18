@@ -12,6 +12,7 @@ import {
 	createWebsocketLeaderStatus,
 	EntityEventBatch,
 	EntityEventBatchTypeRef,
+	EntityUpdate,
 	WebsocketCounterData,
 	WebsocketCounterDataTypeRef,
 	WebsocketEntityDataTypeRef,
@@ -51,11 +52,14 @@ import { Mail, MailDetailsBlobTypeRef, MailTypeRef, PhishingMarkerWebsocketDataT
 import { UserFacade } from "./facades/UserFacade"
 import { ExposedProgressTracker } from "../main/ProgressTracker.js"
 import { SyncTracker } from "../main/SyncTracker.js"
-import { Entity, ServerModelUntypedInstance } from "../common/EntityTypes"
+import { Entity, ServerModelParsedInstance, ServerModelUntypedInstance } from "../common/EntityTypes"
 import { InstancePipeline } from "./crypto/InstancePipeline"
 import { EntityUpdateData, entityUpdateToUpdateData } from "../common/utils/EntityUpdateUtils"
 import { parseKeyVersion } from "./facades/KeyLoaderFacade"
 import { VersionedEncryptedKey } from "./crypto/CryptoWrapper"
+import { CryptoFacade } from "./crypto/CryptoFacade"
+import { Nullable } from "@tutao/tutanota-utils/dist/Utils"
+import { EntityAdapter } from "./crypto/EntityAdapter"
 
 assertWorkerOrNode()
 
@@ -137,7 +141,7 @@ export class EventBusClient {
 
 	private lastAntiphishingMarkersId: Id | null = null
 
-	/** Queue to process all events. */
+	/** Qrueue to process all events. */
 	private readonly eventQueue: EventQueue
 
 	/** Queue that handles incoming websocket messages only. Caches them until we process downloaded ones and then adds them to eventQueue. */
@@ -168,6 +172,7 @@ export class EventBusClient {
 		private readonly progressTracker: ExposedProgressTracker,
 		private readonly syncTracker: SyncTracker,
 		private readonly typeModelResolver: TypeModelResolver,
+		private readonly cryptoFacade: CryptoFacade,
 	) {
 		// We are not connected by default and will not try to unless connect() is called
 		this.state = EventBusState.Terminated
@@ -313,7 +318,11 @@ export class EventBusClient {
 			case MessageType.EntityUpdate: {
 				const entityUpdateData = await this.decodeEntityEventValue(WebsocketEntityDataTypeRef, JSON.parse(value))
 				this.typeModelResolver.setServerApplicationTypesModelHash(entityUpdateData.applicationTypesHash)
-				const updates = await promiseMap(entityUpdateData.entityUpdates, (event) => entityUpdateToUpdateData(this.typeModelResolver, event))
+				const updates = await promiseMap(entityUpdateData.entityUpdates, async (event) => {
+					let instance = await this.getInstanceFromEntityEvent(event)
+					return entityUpdateToUpdateData(this.typeModelResolver, event, instance)
+				})
+
 				this.entityUpdateMessageQueue.add(entityUpdateData.eventBatchId, entityUpdateData.eventBatchOwner, updates)
 				break
 			}
@@ -345,6 +354,24 @@ export class EventBusClient {
 				console.log("ws message with unknown type", type)
 				break
 		}
+	}
+
+	private async getInstanceFromEntityEvent(event: EntityUpdate): Promise<Nullable<ServerModelParsedInstance>> {
+		if (event.instance != null) {
+			const typeRef = new TypeRef<any>(event.application as AppName, parseInt(event.typeId!))
+			const serverTypeModel = await this.typeModelResolver.resolveServerTypeReference(typeRef)
+			const untypedInstance = JSON.parse(event.instance) as ServerModelUntypedInstance
+			const encryptedParsedInstance = await this.instancePipeline.typeMapper.applyJsTypes(serverTypeModel, untypedInstance)
+			const entityAdapter = await EntityAdapter.from(serverTypeModel, encryptedParsedInstance, this.instancePipeline)
+			if (this.userFacade.hasGroup(assertNotNull(entityAdapter._ownerGroup))) {
+				// if the user was just assigned to a new group, it might it is not yet on the user facade,
+				// we can't decrypt the instance in that case.
+				const migratedEntity = await this.cryptoFacade.applyMigrations(typeRef, entityAdapter)
+				const sessionKey = await this.cryptoFacade.resolveSessionKey(migratedEntity)
+				return await this.instancePipeline.cryptoMapper.decryptParsedInstance(serverTypeModel, encryptedParsedInstance, sessionKey)
+			}
+		}
+		return null
 	}
 
 	private onClose(event: CloseEvent) {
@@ -534,7 +561,10 @@ export class EventBusClient {
 		// Count all batches that will actually be processed so that the progress is correct
 		let totalExpectedBatches = 0
 		for (const batch of timeSortedEventBatches) {
-			const updates = await promiseMap(batch.events, (event) => entityUpdateToUpdateData(this.typeModelResolver, event))
+			const updates = await promiseMap(batch.events, async (event) => {
+				const instance = await this.getInstanceFromEntityEvent(event)
+				return entityUpdateToUpdateData(this.typeModelResolver, event, instance)
+			})
 			const batchWasAddedToQueue = this.addBatch(getElementId(batch), getListId(batch), updates, eventQueue)
 
 			if (batchWasAddedToQueue) {
@@ -582,27 +612,31 @@ export class EventBusClient {
 					const typeRef = new TypeRef<any>(typeref.split("/")[0] as AppName, parseInt(typeref.split("/")[1]))
 					const instances = await this.entity.loadMultiple(typeRef, listId, elementIds)
 					if (isSameTypeRef(MailTypeRef, typeRef)) {
-						const mailsWithMailDetails: Array<Mail> = instances.filter((mail: Mail) => isNotNull(mail.mailDetails))
-
-						const mailDetailsByList = groupBy(mailsWithMailDetails, (m) => listIdPart(assertNotNull(m.mailDetails)))
-						for (const [listId, mails] of mailDetailsByList.entries()) {
-							const mailDetailsElementIds = mails.map((m) => elementIdPart(assertNotNull(m.mailDetails)))
-							const initialMap: Map<Id, Mail> = new Map()
-							const mailDetailsElementIdToMail = mails.reduce((previous: Map<Id, Mail>, current) => {
-								previous.set(elementIdPart(assertNotNull(current.mailDetails)), current)
-								return previous
-							}, initialMap)
-							await this.entity.loadMultiple(MailDetailsBlobTypeRef, listId, mailDetailsElementIds, async (mailDetailsElementId: Id) => {
-								const mail = assertNotNull(mailDetailsElementIdToMail.get(mailDetailsElementId))
-								return {
-									key: mail._ownerEncSessionKey,
-									encryptingKeyVersion: parseKeyVersion(mail._ownerKeyVersion ?? "0"),
-								} as VersionedEncryptedKey
-							})
-						}
+						await this.fetchMailDetailsBlob(instances)
 					}
 				}
 			}
+		}
+	}
+
+	private async fetchMailDetailsBlob(instances: any[]) {
+		const mailsWithMailDetails: Array<Mail> = instances.filter((mail: Mail) => isNotNull(mail.mailDetails))
+
+		const mailDetailsByList = groupBy(mailsWithMailDetails, (m) => listIdPart(assertNotNull(m.mailDetails)))
+		for (const [listId, mails] of mailDetailsByList.entries()) {
+			const mailDetailsElementIds = mails.map((m) => elementIdPart(assertNotNull(m.mailDetails)))
+			const initialMap: Map<Id, Mail> = new Map()
+			const mailDetailsElementIdToMail = mails.reduce((previous: Map<Id, Mail>, current) => {
+				previous.set(elementIdPart(assertNotNull(current.mailDetails)), current)
+				return previous
+			}, initialMap)
+			await this.entity.loadMultiple(MailDetailsBlobTypeRef, listId, mailDetailsElementIds, async (mailDetailsElementId: Id) => {
+				const mail = assertNotNull(mailDetailsElementIdToMail.get(mailDetailsElementId))
+				return {
+					key: mail._ownerEncSessionKey,
+					encryptingKeyVersion: parseKeyVersion(mail._ownerKeyVersion ?? "0"),
+				} as VersionedEncryptedKey
+			})
 		}
 	}
 

@@ -802,6 +802,9 @@ export type EntityUpdate = {
 	instanceId: string;
 	operation: NumberString;
 	typeId: null | NumberString;
+	instance: null | string;
+
+	patch: null | PatchList;
 }
 export const VersionTypeRef: TypeRef<Version> = new TypeRef("sys", 480)
 
@@ -3929,20 +3932,6 @@ export type Patch = {
 	attributePath: string;
 	value: null | string;
 }
-export const PatchListTypeRef: TypeRef<PatchList> = new TypeRef("sys", 2572)
-
-export function createPatchList(values: StrippedEntity<PatchList>): PatchList {
-    return Object.assign(create(typeModels[PatchListTypeRef.typeId], PatchListTypeRef), values)
-}
-
-export type PatchList = {
-	_type: TypeRef<PatchList>;
-	_original?: PatchList
-
-	_format: NumberString;
-
-	patches: Patch[];
-}
 export const IdentityKeyPairTypeRef: TypeRef<IdentityKeyPair> = new TypeRef("sys", 2575)
 
 export function createIdentityKeyPair(values: StrippedEntity<IdentityKeyPair>): IdentityKeyPair {
@@ -4047,4 +4036,18 @@ export type RolloutGetOut = {
 	_format: NumberString;
 
 	rollouts: Rollout[];
+}
+export const PatchListTypeRef: TypeRef<PatchList> = new TypeRef("sys", 2612)
+
+export function createPatchList(values: StrippedEntity<PatchList>): PatchList {
+    return Object.assign(create(typeModels[PatchListTypeRef.typeId], PatchListTypeRef), values)
+}
+
+export type PatchList = {
+	_type: TypeRef<PatchList>;
+	_original?: PatchList
+
+	_id: Id;
+
+	patches: Patch[];
 }

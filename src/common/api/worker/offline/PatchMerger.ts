@@ -79,17 +79,19 @@ export class PatchMerger {
 
 	private async applySinglePatch(parsedInstance: ServerModelParsedInstance, typeModel: ServerTypeModel, patch: Patch) {
 		try {
-			const pathList: Array<string> = patch.attributePath.split("/")
+			const pathList: Array<string> = patch.attributePath.split("/") //== /$mailId/$attrIdRecipient/${aggregateIdRecipient}/${attrIdName}
 			const pathResult: PathResult = await this.traversePath(parsedInstance, typeModel, pathList)
 			const attributeId = pathResult.attributeId
+
 			const pathResultTypeModel = pathResult.typeModel
 			// We need to map and decrypt for REPLACE and ADDITEM as the payloads are encrypted, REMOVEITEM only has either aggregate ids, generated ids, or id tuples
 			if (patch.patchOperation !== PatchOperationType.REMOVE_ITEM) {
 				const encryptedParsedValue: Nullable<EncryptedParsedValue | EncryptedParsedAssociation> = await this.parseValueOnPatch(pathResult, patch.value)
-				const isAttributeEncrypted =
-					pathResultTypeModel.values[attributeId]?.encrypted || pathResultTypeModel.associations[attributeId]?.type === AssociationType.Aggregation
+				const isAggregation = pathResultTypeModel.associations[attributeId]?.type === AssociationType.Aggregation
+
+				const isEncryptedValue = pathResultTypeModel.values[attributeId]?.encrypted
 				let value: Nullable<ParsedValue | ParsedAssociation>
-				if (isAttributeEncrypted) {
+				if ((isAggregation && typeModel.encrypted) || isEncryptedValue) {
 					const sk = await this.getSessionKey(parsedInstance, typeModel)
 					value = await this.decryptValueOnPatchIfNeeded(pathResult, encryptedParsedValue, sk)
 				} else {
