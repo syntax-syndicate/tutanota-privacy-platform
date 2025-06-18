@@ -19,19 +19,19 @@ import {
 	WebsocketLeaderStatusTypeRef,
 } from "../entities/sys/TypeRefs.js"
 import {
-	isSameTypeRef,
 	AppName,
+	assertNotNull,
 	binarySearch,
 	delay,
+	groupBy,
 	identity,
+	isNotNull,
+	isSameTypeRef,
 	lastThrow,
 	ofClass,
 	promiseMap,
 	randomIntFromInterval,
 	TypeRef,
-	groupBy,
-	isNotNull,
-	assertNotNull,
 } from "@tutao/tutanota-utils"
 import { OutOfSyncError } from "../common/error/OutOfSyncError"
 import { CloseEventBusOption, GroupType, SECOND_MS } from "../common/TutanotaConstants"
@@ -47,14 +47,7 @@ import { SleepDetector } from "./utils/SleepDetector.js"
 import sysModelInfo from "../entities/sys/ModelInfo.js"
 import tutanotaModelInfo from "../entities/tutanota/ModelInfo.js"
 import { TypeModelResolver } from "../common/EntityFunctions.js"
-import {
-	Mail,
-	MailDetailsBlob,
-	MailDetailsBlobTypeRef,
-	MailTypeRef,
-	PhishingMarkerWebsocketDataTypeRef,
-	ReportedMailFieldMarker,
-} from "../entities/tutanota/TypeRefs"
+import { Mail, MailDetailsBlobTypeRef, MailTypeRef, PhishingMarkerWebsocketDataTypeRef, ReportedMailFieldMarker } from "../entities/tutanota/TypeRefs"
 import { UserFacade } from "./facades/UserFacade"
 import { ExposedProgressTracker } from "../main/ProgressTracker.js"
 import { SyncTracker } from "../main/SyncTracker.js"
@@ -417,9 +410,6 @@ export class EventBusClient {
 
 		return p
 			.then(() => {
-				// prefetch Mails
-				// const preloadMap = this.eventQueue.getPreloadMap()
-
 				this.entityUpdateMessageQueue.resume()
 				this.eventQueue.resume()
 			})
@@ -553,9 +543,70 @@ export class EventBusClient {
 				totalExpectedBatches++
 			}
 		}
+
+		// We only have the correct amount of total work after adding all entity event batches.
+		// The progress for processed batches is tracked inside the event queue.
+		const progressMonitor = new ProgressMonitorDelegate(this.progressTracker, totalExpectedBatches + 1)
+		console.log("ws", `progress monitor expects ${totalExpectedBatches} events`)
+		await progressMonitor.workDone(1) // show progress right away
+		eventQueue.setProgressMonitor(progressMonitor)
+
+		await this.preloadEntities()
+
+		// We don't have any missing update, we can just set the sync as finished
+		if (totalExpectedBatches === 0) {
+			this.syncTracker.markSyncAsDone()
+		}
+
+		// We've loaded all the batches, we've added them to the queue, we can let the cache remember sync point for us to detect out of sync now.
+		// It is possible that we will record the time before the batch will be processed but the risk is low.
+		await this.cache.recordSyncTime()
+	}
+
+	/**
+	 * We preload list element entities in case we get updates for multiple instances of a single list.
+	 * So that single item requests for those instances will be served from the cache.
+	 */
+	private async preloadEntities() {
 		const start = new Date().getTime()
 		console.log("====== PREFETCH ============")
-		// put mail events into the preloaded map?
+		const preloadMap = this.groupUpdatedInstances()
+		await this.loadGroupedListElementEntities(preloadMap)
+		console.log("====== PREFETCH END ============", new Date().getTime() - start, "ms")
+	}
+
+	private async loadGroupedListElementEntities(preloadMap: Map<string, Map<Id, Array<Id>>>) {
+		for (const [typeref, groupedListIds] of preloadMap.entries()) {
+			for (const [listId, elementIds] of groupedListIds.entries()) {
+				if (elementIds.length > 1) {
+					const typeRef = new TypeRef<any>(typeref.split("/")[0] as AppName, parseInt(typeref.split("/")[1]))
+					const instances = await this.entity.loadMultiple(typeRef, listId, elementIds)
+					if (isSameTypeRef(MailTypeRef, typeRef)) {
+						const mailsWithMailDetails: Array<Mail> = instances.filter((mail: Mail) => isNotNull(mail.mailDetails))
+
+						const mailDetailsByList = groupBy(mailsWithMailDetails, (m) => listIdPart(assertNotNull(m.mailDetails)))
+						for (const [listId, mails] of mailDetailsByList.entries()) {
+							const mailDetailsElementIds = mails.map((m) => elementIdPart(assertNotNull(m.mailDetails)))
+							const initialMap: Map<Id, Mail> = new Map()
+							const mailDetailsElementIdToMail = mails.reduce((previous: Map<Id, Mail>, current) => {
+								previous.set(elementIdPart(assertNotNull(current.mailDetails)), current)
+								return previous
+							}, initialMap)
+							await this.entity.loadMultiple(MailDetailsBlobTypeRef, listId, mailDetailsElementIds, async (mailDetailsElementId: Id) => {
+								const mail = assertNotNull(mailDetailsElementIdToMail.get(mailDetailsElementId))
+								return {
+									key: mail._ownerEncSessionKey,
+									encryptingKeyVersion: parseKeyVersion(mail._ownerKeyVersion ?? "0"),
+								} as VersionedEncryptedKey
+							})
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private groupUpdatedInstances(): Map<string, Map<Id, Array<Id>>> {
 		const preloadMap: Map<string, Map<Id, Array<Id>>> = new Map()
 		const queuedEvents = this.eventQueue.eventQueue
 		for (const e of queuedEvents) {
@@ -572,49 +623,7 @@ export class EventBusClient {
 				}
 			}
 		}
-		for (const [typeref, groupedListIds] of preloadMap.entries()) {
-			for (const [listId, elementIds] of groupedListIds.entries()) {
-				const typeRef = new TypeRef<any>(typeref.split("/")[0] as AppName, parseInt(typeref.split("/")[1]))
-				const instances = await this.entity.loadMultiple(typeRef, listId, elementIds)
-				if (isSameTypeRef(MailTypeRef, typeRef)) {
-					const mailsWithMailDetails: Array<Mail> = instances.filter((mail: Mail) => isNotNull(mail.mailDetails))
-
-					const mailDetailsByList = groupBy(mailsWithMailDetails, (m) => listIdPart(assertNotNull(m.mailDetails)))
-					for (const [listId, mails] of mailDetailsByList.entries()) {
-						const mailDetailsElementIds = mails.map((m) => elementIdPart(assertNotNull(m.mailDetails)))
-						const initialMap: Map<Id, Mail> = new Map()
-						const mailDetailsElementIdToMail = mails.reduce((previous: Map<Id, Mail>, current) => {
-							previous.set(elementIdPart(assertNotNull(current.mailDetails)), current)
-							return previous
-						}, initialMap)
-						await this.entity.loadMultiple(MailDetailsBlobTypeRef, listId, mailDetailsElementIds, async (mailDetailsElementId: Id) => {
-							const mail = assertNotNull(mailDetailsElementIdToMail.get(mailDetailsElementId))
-							return {
-								key: mail._ownerEncSessionKey,
-								encryptingKeyVersion: parseKeyVersion(mail._ownerKeyVersion ?? "0"),
-							} as VersionedEncryptedKey
-						})
-					}
-				}
-			}
-		}
-		console.log("====== PREFETCH END ============", new Date().getTime() - start, "ms")
-
-		// We only have the correct amount of total work after adding all entity event batches.
-		// The progress for processed batches is tracked inside the event queue.
-		const progressMonitor = new ProgressMonitorDelegate(this.progressTracker, totalExpectedBatches + 1)
-		console.log("ws", `progress monitor expects ${totalExpectedBatches} events`)
-		await progressMonitor.workDone(1) // show progress right away
-		eventQueue.setProgressMonitor(progressMonitor)
-
-		// We don't have any missing update, we can just set the sync as finished
-		if (totalExpectedBatches === 0) {
-			this.syncTracker.markSyncAsDone()
-		}
-
-		// We've loaded all the batches, we've added them to the queue, we can let the cache remember sync point for us to detect out of sync now.
-		// It is possible that we will record the time before the batch will be processed but the risk is low.
-		await this.cache.recordSyncTime()
+		return preloadMap
 	}
 
 	private async loadEntityEventsForGroup(groupId: Id): Promise<EntityEventBatch[]> {
