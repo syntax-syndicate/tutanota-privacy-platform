@@ -72,7 +72,6 @@ export class PlanSelector implements Component<PlanSelectorAttr> {
 
 	view({ attrs: { options, priceAndConfigProvider, actionButtons, hasCampaign, hidePaidPlans, isApplePrice } }: Vnode<PlanSelectorAttr>): Children {
 		const isYearly = options.paymentInterval() === PaymentInterval.Yearly
-		const isPaidPlanSelected = this.currentPlan() === PlanType.Revolutionary || this.currentPlan() === PlanType.Legend
 
 		const renderFootnoteElement = (): Children => {
 			const getRevoPriceStrProps = {
