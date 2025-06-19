@@ -1,5 +1,4 @@
 import {
-	CacheMode,
 	EntityRestClient,
 	EntityRestClientEraseOptions,
 	EntityRestClientLoadOptions,
@@ -9,7 +8,7 @@ import {
 	OwnerEncSessionKeyProvider,
 } from "./EntityRestClient"
 import { OperationType } from "../../common/TutanotaConstants"
-import { assertNotNull, getFirstOrThrow, getTypeString, groupBy, isSameTypeRef, lastThrow, TypeRef } from "@tutao/tutanota-utils"
+import { assertNotNull, getFirstOrThrow, getTypeString, groupBy, isNotNull, isSameTypeRef, lastThrow, TypeRef } from "@tutao/tutanota-utils"
 import {
 	AuditLogEntryTypeRef,
 	BucketPermissionTypeRef,
@@ -36,7 +35,6 @@ import {
 	GENERATED_MAX_ID,
 	GENERATED_MIN_ID,
 	get_IdValue,
-	getElementId,
 	isCustomIdType,
 	listIdPart,
 } from "../../common/utils/EntityUtils"
@@ -45,10 +43,11 @@ import { assertWorkerOrNode } from "../../common/Env"
 import type { Entity, ListElementEntity, ServerModelParsedInstance, SomeEntity, TypeModel } from "../../common/EntityTypes"
 import { ENTITY_EVENT_BATCH_EXPIRE_MS } from "../EventBusClient"
 import { CustomCacheHandlerMap } from "./cacheHandler/CustomCacheHandler.js"
-import { containsEventOfType, EntityUpdateData, getEventOfType, isUpdateForTypeRef } from "../../common/utils/EntityUpdateUtils.js"
+import { containsEventOfType, EntityUpdateData, getEventOfType } from "../../common/utils/EntityUpdateUtils.js"
 import { TypeModelResolver } from "../../common/EntityFunctions"
 import { AttributeModel } from "../../common/AttributeModel"
 import { collapseId, expandId } from "./RestClientIdUtils"
+import { PatchMerger } from "../offline/PatchMerger"
 
 assertWorkerOrNode()
 
@@ -271,11 +270,15 @@ export interface CacheStorage extends ExposedCacheStorage {
  * lowerRangeId may be anything from MIN_ID to c, upperRangeId may be anything from k to MAX_ID
  */
 export class DefaultEntityRestCache implements EntityRestCache {
+	private readonly patchMerger: PatchMerger
+
 	constructor(
 		private readonly entityRestClient: EntityRestClient,
 		private readonly storage: CacheStorage,
 		private readonly typeModelResolver: TypeModelResolver,
-	) {}
+	) {
+		this.patchMerger = new PatchMerger(storage, entityRestClient.instancePipeline, typeModelResolver, entityRestClient._crypto)
+	}
 
 	async load<T extends SomeEntity>(typeRef: TypeRef<T>, id: PropertyType<T, "_id">, opts: EntityRestClientLoadOptions = {}): Promise<T> {
 		const useCache = this.shouldUseCache(typeRef, opts)
@@ -729,71 +732,10 @@ export class DefaultEntityRestCache implements EntityRestCache {
 	async entityEventsReceived(events: readonly EntityUpdateData[], batchId: Id, groupId: Id): Promise<readonly EntityUpdateData[]> {
 		await this.recordSyncTime()
 
-		// we handle post multiple create operations separately to optimize the number of requests with getMultiple
-		const createUpdatesForLETs: EntityUpdateData[] = []
-		const regularUpdates: EntityUpdateData[] = [] // all updates not resulting from post multiple requests
-
-		for (const update of events) {
-			// monitor application is ignored
-			if (update.typeRef.app === "monitor") continue
-			// mailSetEntries are ignored because move operations are handled as a special event (and no post multiple is possible)
-			if (
-				update.operation === OperationType.CREATE &&
-				getUpdateInstanceId(update).instanceListId != null &&
-				!isUpdateForTypeRef(MailTypeRef, update) &&
-				!isUpdateForTypeRef(MailSetEntryTypeRef, update)
-			) {
-				createUpdatesForLETs.push(update)
-			} else {
-				regularUpdates.push(update)
-			}
-		}
-
-		const createUpdatesForLETsPerList = groupBy(createUpdatesForLETs, (update) => update.instanceListId)
-
-		const postMultipleEventUpdates: EntityUpdateData[][] = []
-		// we first handle potential post multiple updates in get multiple requests
-		for (let [instanceListId, updates] of createUpdatesForLETsPerList) {
-			const firstUpdate = updates[0]
-			const typeRef = firstUpdate.typeRef
-			const ids = updates.map((update) => update.instanceId)
-
-			// We only want to load the instances that are in cache range
-			const customHandler = this.storage.getCustomCacheHandlerMap().get(typeRef)
-			const idsInCacheRange =
-				customHandler && customHandler.getElementIdsInCacheRange
-					? await customHandler.getElementIdsInCacheRange(this.storage, instanceListId, ids)
-					: await this.getElementIdsInCacheRange(typeRef, instanceListId, ids)
-
-			if (idsInCacheRange.length === 0) {
-				postMultipleEventUpdates.push(updates)
-			} else {
-				const updatesNotInCacheRange =
-					idsInCacheRange.length === updates.length ? [] : updates.filter((update) => !idsInCacheRange.includes(update.instanceId))
-
-				try {
-					// loadMultiple is only called to cache the elements and check which ones return errors
-					const returnedInstances = await this._loadMultiple(typeRef, instanceListId, idsInCacheRange, undefined, { cacheMode: CacheMode.WriteOnly })
-					//We do not want to pass updates that caused an error
-					if (returnedInstances.length !== idsInCacheRange.length) {
-						const returnedIds = returnedInstances.map((instance) => getElementId(instance))
-						postMultipleEventUpdates.push(updates.filter((update) => returnedIds.includes(update.instanceId)).concat(updatesNotInCacheRange))
-					} else {
-						postMultipleEventUpdates.push(updates)
-					}
-				} catch (e) {
-					if (e instanceof NotAuthorizedError) {
-						// return updates that are not in cache Range if NotAuthorizedError (for those updates that are in cache range)
-						postMultipleEventUpdates.push(updatesNotInCacheRange)
-					} else {
-						throw e
-					}
-				}
-			}
-		}
+		const regularUpdates = events.filter((u) => u.typeRef.app !== "monitor")
 
 		// we need an array of UpdateEntityData
-		const otherEventUpdates: EntityUpdateData[] = []
+		const filteredUpdateEvents: EntityUpdateData[] = []
 		for (let update of regularUpdates) {
 			const { operation, typeRef } = update
 			const { instanceListId, instanceId } = getUpdateInstanceId(update)
@@ -802,7 +744,7 @@ export class DefaultEntityRestCache implements EntityRestCache {
 				case OperationType.UPDATE: {
 					const handledUpdate = await this.processUpdateEvent(typeRef, update)
 					if (handledUpdate) {
-						otherEventUpdates.push(handledUpdate)
+						filteredUpdateEvents.push(handledUpdate)
 					}
 					break // do break instead of continue to avoid ide warnings
 				}
@@ -822,13 +764,13 @@ export class DefaultEntityRestCache implements EntityRestCache {
 					} else {
 						await this.storage.deleteIfExists(typeRef, instanceListId, instanceId)
 					}
-					otherEventUpdates.push(update)
+					filteredUpdateEvents.push(update)
 					break // do break instead of continue to avoid ide warnings
 				}
 				case OperationType.CREATE: {
 					const handledUpdate = await this.processCreateEvent(typeRef, update, events)
 					if (handledUpdate) {
-						otherEventUpdates.push(handledUpdate)
+						filteredUpdateEvents.push(handledUpdate)
 					}
 					break // do break instead of continue to avoid ide warnings
 				}
@@ -865,15 +807,13 @@ export class DefaultEntityRestCache implements EntityRestCache {
 		// the whole batch has been written successfully
 		await this.storage.putLastBatchIdForGroup(groupId, batchId)
 		// merge the results
-		return otherEventUpdates.concat(postMultipleEventUpdates.flat())
+		return filteredUpdateEvents
 	}
 
 	/** Returns {null} when the update should be skipped. */
-	private async processCreateEvent(
-		typeRef: TypeRef<any>,
-		update: EntityUpdateData,
-		batch: ReadonlyArray<EntityUpdateData>,
-	): Promise<EntityUpdateData | null> {
+	//
+	// @visbilefortesting
+	public async processCreateEvent(typeRef: TypeRef<any>, update: EntityUpdateData, batch: ReadonlyArray<EntityUpdateData>): Promise<EntityUpdateData | null> {
 		// do not return undefined to avoid implicit returns
 		const { instanceId, instanceListId } = getUpdateInstanceId(update)
 
@@ -894,14 +834,14 @@ export class DefaultEntityRestCache implements EntityRestCache {
 			} else {
 				// If there is a custom handler we follow its decision.
 				// Otherwise, we do a range check to see if we need to keep the range up-to-date.
-				const shouldLoadOnCreateEvent = this.storage.getCustomCacheHandlerMap().get(typeRef)?.shouldLoadOnCreateEvent?.(update)
+				const canLoadCustomInstance = this.storage.getCustomCacheHandlerMap().get(typeRef)?.shouldLoadOnCreateEvent?.(update)
 				const instanceRangeIsCached = await this.storage.isElementIdInCacheRange(typeRef, instanceListId, instanceId)
 				const instanceNotCached = (await this.storage.getParsed(typeRef, instanceListId, instanceId)) == null
-				const shouldLoad = shouldLoadOnCreateEvent ?? (instanceRangeIsCached && instanceNotCached)
+				const shouldLoad = canLoadCustomInstance ?? (instanceRangeIsCached && instanceNotCached)
 				if (shouldLoad) {
 					// No need to try to download something that's not there anymore
 					// We do not consult custom handlers here because they are only needed for list elements.
-					if (update.instance) {
+					if (update.instance != null) {
 						console.log("putting the entity on the create event for ", getTypeString(typeRef), instanceListId, instanceId, " to the storage")
 						await this.storage.put(update.typeRef, update.instance)
 						return update
@@ -961,12 +901,14 @@ export class DefaultEntityRestCache implements EntityRestCache {
 					console.log("DefaultEntityRestCache - processUpdateEvent of type Group:" + instanceId)
 				}
 
-				if (update.instance) {
-					await this.storage.put(update.typeRef, update.instance)
-				} else {
-					const newEntity = await this.entityRestClient.loadParsedInstance(typeRef, collapseId(instanceListId, instanceId))
-					await this.storage.put(typeRef, newEntity)
+				// only fetch again from server if patch can't be successfully applied
+				const patches = assertNotNull(update.patches, "Update event should always have a list of patch")
+				let updatedInstance = await this.patchMerger.getPatchedInstanceParsed(update.typeRef, update.instanceListId, update.instanceId, patches)
+				if (!updatedInstance) {
+					updatedInstance = await this.entityRestClient.loadParsedInstance(typeRef, collapseId(instanceListId, instanceId))
 				}
+
+				await this.storage.put(typeRef, updatedInstance)
 				return update
 			} catch (e) {
 				// If the entity is not there anymore we should evict it from the cache and not keep the outdated/nonexisting instance around.

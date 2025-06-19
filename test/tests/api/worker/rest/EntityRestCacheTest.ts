@@ -11,14 +11,19 @@ import {
 	GENERATED_MIN_ID,
 	getElementId,
 	getListId,
+	listIdPart,
 	stringToCustomId,
 } from "../../../../../src/common/api/common/utils/EntityUtils.js"
-import { arrayOf, clone, deepEqual, downcast, isSameTypeRef, last, promiseMap, TypeRef } from "@tutao/tutanota-utils"
+import { arrayOf, assertNotNull, clone, deepEqual, downcast, isSameTypeRef, last, promiseMap, TypeRef } from "@tutao/tutanota-utils"
 import {
+	createEntityUpdate,
+	createPatch,
+	createPatchList,
 	CustomerTypeRef,
 	ExternalUserReferenceTypeRef,
 	GroupKeyTypeRef,
 	MailAddressToGroupTypeRef,
+	Patch,
 	PermissionTypeRef,
 	RootInstanceTypeRef,
 } from "../../../../../src/common/api/entities/sys/TypeRefs.js"
@@ -52,10 +57,12 @@ import { SqlCipherFacade } from "../../../../../src/common/native/common/generat
 import { clientInitializedTypeModelResolver, createTestEntity, modelMapperFromTypeModelResolver, removeOriginals } from "../../../TestUtils.js"
 import { CacheMode, EntityRestClient } from "../../../../../src/common/api/worker/rest/EntityRestClient.js"
 import { CustomCacheHandler, CustomCacheHandlerMap } from "../../../../../src/common/api/worker/rest/cacheHandler/CustomCacheHandler"
-import { TypeModelResolver } from "../../../../../src/common/api/common/EntityFunctions.js"
+import { PatchOperationType, TypeModelResolver } from "../../../../../src/common/api/common/EntityFunctions.js"
 import { ModelMapper } from "../../../../../src/common/api/worker/crypto/ModelMapper"
 import { Entity, ServerModelParsedInstance } from "../../../../../src/common/api/common/EntityTypes"
-import { EntityUpdateData } from "../../../../../src/common/api/common/utils/EntityUpdateUtils"
+import { EntityUpdateData, entityUpdateToUpdateData } from "../../../../../src/common/api/common/utils/EntityUpdateUtils"
+import { AttributeModel } from "../../../../../src/common/api/common/AttributeModel"
+import { Nullable } from "@tutao/tutanota-utils/dist/Utils"
 
 const { anything } = matchers
 
@@ -133,14 +140,44 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 			return downcast<ServerModelParsedInstance>(await modelMapper.mapToClientModelParsedInstance(entity._type, entity))
 		}
 
-		let createUpdate = function (typeRef: TypeRef<any>, listId: Id, id: Id, operation: OperationType): EntityUpdateData {
-			// fixme maybe pass the instance to the function?
-			return {
-				typeRef: typeRef,
-				instanceId: id,
+		let updateDataForGeneric = async function <T extends Entity>(
+			typeRef: TypeRef<T>,
+			listId: Id,
+			elementId: Id,
+			operation: OperationType,
+			instance: Nullable<T>,
+			patches: Array<Patch>,
+		): Promise<EntityUpdateData> {
+			const entityUpdate = createEntityUpdate({
+				type: undefined as any, // no need for type since we have passed typeId
 				instanceListId: listId,
-				operation,
-			}
+				instanceId: elementId,
+				operation: operation,
+				typeId: typeRef.typeId.toString(),
+				application: typeRef.app,
+				patch: createPatchList({ patches }),
+				instance: instance ? JSON.stringify(await toStorableInstance(instance)) : null,
+			})
+			return await entityUpdateToUpdateData(downcast(undefined), entityUpdate, downcast<ServerModelParsedInstance>(instance))
+		}
+		let updateDataForCreate = function <T extends Entity>(
+			typeRef: TypeRef<T>,
+			listId: Id,
+			elementId: Id,
+			instance: Nullable<T>,
+		): Promise<EntityUpdateData> {
+			return updateDataForGeneric(typeRef, listId, elementId, OperationType.CREATE, instance, [])
+		}
+		let updateDataForUpdate = async function <T extends Entity>(
+			typeRef: TypeRef<T>,
+			listId: Id,
+			elementId: Id,
+			patches: Array<Patch>,
+		): Promise<EntityUpdateData> {
+			return updateDataForGeneric(typeRef, listId, elementId, OperationType.UPDATE, null, patches)
+		}
+		let updateDataForDelete = async function <T extends Entity>(typeRef: TypeRef<T>, listId: Id, elementId: Id): Promise<EntityUpdateData> {
+			return updateDataForGeneric(typeRef, listId, elementId, OperationType.DELETE, null, [])
 		}
 
 		let createId = function (idText) {
@@ -207,8 +244,8 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 		})
 
 		o.spec("entityEventsReceived", function () {
-			const contactListId1 = "contactListId1"
-			const contactListId2 = "contactListId2"
+			const firstContactListId = "contactListId1"
+			const secondContactListId = "contactListId2"
 			const id1 = "id1"
 			const id2 = "id2"
 			const id3 = "id3"
@@ -223,16 +260,16 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 			const calendarEventIds = [0, 1, 2, 3, 4, 5, 6].map((n) => createEventElementId(timestamp, n))
 
 			o("writes batch meta on entity update", async function () {
-				const contact1 = createTestEntity(ContactTypeRef, { _id: [contactListId1, id1] })
-				const contact2 = createTestEntity(ContactTypeRef, { _id: [contactListId1, id2] })
+				const contact1 = createTestEntity(ContactTypeRef, { _id: [firstContactListId, id1] })
+				const contact2 = createTestEntity(ContactTypeRef, { _id: [firstContactListId, id2] })
 
 				const batch = [
-					createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-					createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
+					await updateDataForCreate(ContactTypeRef, firstContactListId, id1, contact1),
+					await updateDataForCreate(ContactTypeRef, firstContactListId, id2, contact2),
 				]
 
 				const loadMultiple = func<typeof entityRestClient.loadMultiple>()
-				when(loadMultiple(ContactTypeRef, contactListId1, [id1, id2])).thenResolve([contact1, contact2])
+				when(loadMultiple(ContactTypeRef, firstContactListId, [id1, id2])).thenResolve([contact1, contact2])
 				replace(entityRestClient, "loadMultiple", loadMultiple)
 
 				const putLastBatchIdForGroup = func<typeof storage.putLastBatchIdForGroup>()
@@ -244,401 +281,432 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				verify(putLastBatchIdForGroup(groupId, batchId))
 			})
 
-			o.spec("postMultiple", function () {
-				o.beforeEach(async function () {
-					await storage.setNewRangeForList(ContactTypeRef, contactListId1, id1, id7)
-					await storage.setNewRangeForList(ContactTypeRef, contactListId2, id1, id7)
-					//when using offline calendar ids are always in cache range
-				})
-				o("entity events received should call loadMultiple when receiving updates from a postMultiple", async function () {
-					const contact1 = createTestEntity(ContactTypeRef, {
-						_id: [contactListId1, id1],
-						_permissions: "permissionId",
-						_ownerGroup: "owner-group",
-					})
-					const contact2 = createTestEntity(ContactTypeRef, {
-						_id: [contactListId1, id2],
-						_permissions: "permissionId",
-						_ownerGroup: "owner-group",
-					})
+			// can we move this test to EventBusClientTest?
+			// o.spec("postMultiple", function () {
+			// 	return // todo
+			//
+			// 	o.beforeEach(async function () {
+			// 		await storage.setNewRangeForList(ContactTypeRef, firstContactListId, id1, id7)
+			// 		await storage.setNewRangeForList(ContactTypeRef, secondContactListId, id1, id7)
+			// 		//when using offline calendar ids are always in cache range
+			// 	})
+			// 	o("entity events received should not call loadMultiple when receiving updates from a postMultiple", async function () {
+			// 		const contact1 = createTestEntity(ContactTypeRef, {
+			// 			_id: [firstContactListId, id1],
+			// 			_permissions: "permissionId",
+			// 			_ownerGroup: "owner-group",
+			// 		})
+			// 		const contact2 = createTestEntity(ContactTypeRef, {
+			// 			_id: [firstContactListId, id2],
+			// 			_permissions: "permissionId",
+			// 			_ownerGroup: "owner-group",
+			// 		})
+			//
+			// 		const batch = [
+			// 			await updateDataForCreate(ContactTypeRef, firstContactListId, id1, contact1),
+			// 			await updateDataForCreate(ContactTypeRef, firstContactListId, id2, contact2),
+			// 		]
+			// 		batch[0].instance = await toStorableInstance(contact1)
+			// 		batch[1].instance = await toStorableInstance(contact2)
+			//
+			// 		const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
+			// 		const firstStoredContact = await storage.get(ContactTypeRef, firstContactListId, id1)
+			// 		o(removeOriginals(assertNotNull(firstStoredContact))).deepEquals(contact1)
+			// 		const secondStoredContact = await storage.get(ContactTypeRef, firstContactListId, id2)
+			// 		o(removeOriginals(assertNotNull(secondStoredContact))).deepEquals(contact2)
+			// 		o(updates).deepEquals(batch)
+			// 	})
+			//
+			// 	if (name === "offline") {
+			// 		// in the other case storage is an EphemeralCache which doesn't use custom handlers or caches calendar events.
+			// 		o("entity events received should call loadMultiple when receiving updates from a postMultiple with CustomCacheHandler", async function () {
+			// 			const event1 = createTestEntity(CalendarEventTypeRef, {
+			// 				_id: [calendarEventListId, calendarEventIds[0]],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			})
+			// 			const event2 = createTestEntity(CalendarEventTypeRef, {
+			// 				_id: [calendarEventListId, calendarEventIds[1]],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			})
+			// 			// We only consider events to be in the range if we do actually have correct range
+			// 			await storage.setNewRangeForList(CalendarEventTypeRef, calendarEventListId, CUSTOM_MIN_ID, CUSTOM_MAX_ID)
+			//
+			// 			const batch = [
+			// 				await updateDataForCreate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0], event1),
+			// 				await updateDataForCreate(ContactTypeRef, calendarEventListId, calendarEventIds[1], event2), // das not sure of what to pass here
+			// 			]
+			//
+			// 			when(
+			// 				entityRestClient.loadMultipleParsedInstances(
+			// 					CalendarEventTypeRef,
+			// 					calendarEventListId,
+			// 					[calendarEventIds[0], calendarEventIds[1]],
+			// 					anything(),
+			// 					anything(),
+			// 				),
+			// 			).thenResolve(await promiseMap([event1, event2], (contact) => toStorableInstance(contact)))
+			// 			const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
+			// 			verify(
+			// 				entityRestClient.loadMultipleParsedInstances(
+			// 					CalendarEventTypeRef,
+			// 					calendarEventListId,
+			// 					[calendarEventIds[0], calendarEventIds[1]],
+			// 					anything(),
+			// 					anything(),
+			// 				),
+			// 				{ times: 1 },
+			// 			)
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).notEquals(null)
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).notEquals(null)
+			// 			o(updates).deepEquals(batch)
+			// 		})
+			// 	}
+			//
+			// 	o("post multiple with different update type and list ids should make multiple load calls", async function () {
+			// 		const batch = [
+			// 			updateDataForCreate(ContactTypeRef, firstContactListId, id1, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, firstContactListId, id2, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, secondContactListId, id3, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, secondContactListId, id4, OperationType.CREATE),
+			// 			updateDataForCreate(CustomerTypeRef, null as any, id5, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, firstContactListId, id2, OperationType.UPDATE),
+			// 			updateDataForCreate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0], OperationType.CREATE),
+			// 			updateDataForCreate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1], OperationType.CREATE),
+			// 		]
+			//
+			// 		const calendarEvents = [
+			// 			createTestEntity(CalendarEventTypeRef, {
+			// 				_id: [calendarEventListId, calendarEventIds[0]],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 			createTestEntity(CalendarEventTypeRef, {
+			// 				_id: [calendarEventListId, calendarEventIds[1]],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 		]
+			//
+			// 		const firstContactsList = [
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [firstContactListId, id1],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [firstContactListId, id2],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 		]
+			//
+			// 		const secondContactsList = [
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [secondContactListId, "id3"],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [secondContactListId, "id4"],
+			// 				_permissions: "permissionId",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 		]
+			//
+			// 		when(entityRestClient.loadParsedInstance(ContactTypeRef, [firstContactListId, id2])).thenResolve(
+			// 			await toStorableInstance(
+			// 				createTestEntity(ContactTypeRef, {
+			// 					_id: [firstContactListId, id2],
+			// 					_permissions: "permissions",
+			// 					_ownerGroup: "owner-group",
+			// 				}),
+			// 			),
+			// 		)
+			// 		when(entityRestClient.loadParsedInstance(CustomerTypeRef, id5)).thenResolve(
+			// 			await toStorableInstance(
+			// 				createTestEntity(CustomerTypeRef, {
+			// 					_id: id5,
+			// 					_permissions: "permissions",
+			// 					_ownerGroup: "owner-group",
+			// 				}),
+			// 			),
+			// 		)
+			//
+			// 		when(
+			// 			entityRestClient.loadMultipleParsedInstances(
+			// 				CalendarEventTypeRef,
+			// 				calendarEventListId,
+			// 				[calendarEventIds[0], calendarEventIds[1]],
+			// 				anything(),
+			// 				anything(),
+			// 			),
+			// 		).thenResolve(await promiseMap(calendarEvents, (event) => toStorableInstance(event)))
+			//
+			// 		when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, firstContactListId, ["id1", "id2"], anything(), anything())).thenResolve(
+			// 			await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
+			// 		)
+			//
+			// 		when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, secondContactListId, ["id3", "id4"], anything(), anything())).thenResolve(
+			// 			await promiseMap(secondContactsList, (contact) => toStorableInstance(contact)),
+			// 		)
+			//
+			// 		if (name === "offline") {
+			// 			await storage.setNewRangeForList(CalendarEventTypeRef, calendarEventListId, CUSTOM_MIN_ID, CUSTOM_MAX_ID)
+			// 		}
+			// 		const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
+			// 		verify(entityRestClient.loadParsedInstance(ContactTypeRef, ["contactListId1", "id2"]), { times: 1 }) // One load for contact update
+			// 		o(await storage.get(ContactTypeRef, firstContactListId, id1)).notEquals(null)
+			// 		o(await storage.get(ContactTypeRef, firstContactListId, id2)).notEquals(null)
+			// 		o(await storage.get(ContactTypeRef, secondContactListId, id3)).notEquals(null)
+			// 		o(await storage.get(ContactTypeRef, secondContactListId, id4)).notEquals(null)
+			// 		if (name === "offline") {
+			// 			verify(entityRestClient.loadMultipleParsedInstances(anything(), anything(), anything(), anything(), anything()), { times: 3 }) // Three load multiple, one for each contact list and one for the calendar list
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).notEquals(null)(
+			// 				"when using offline storage event 0 should be cached",
+			// 			)
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).notEquals(null)(
+			// 				"when using offline storage event 1 should be cached",
+			// 			)
+			// 		} else {
+			// 			verify(entityRestClient.loadMultipleParsedInstances(anything(), anything(), anything(), anything(), anything()), { times: 2 }) // two load multiple, one for each contact list and none for the calendar list
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).equals(null)(
+			// 				"when using offline storage event 0 should not be cached",
+			// 			)
+			// 			o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).equals(null)(
+			// 				"when using offline storage event 1 should not be cached",
+			// 			)
+			// 		}
+			// 		o(await storage.get(CustomerTypeRef, null, id5)).equals(null)
+			// 		o(filteredUpdates.length).equals(batch.length)
+			// 		for (const update of batch) {
+			// 			o(filteredUpdates.includes(update)).equals(true)
+			// 		}
+			// 	})
+			//
+			// 	o("returns empty [] when loadMultiple throwing an error", async function () {
+			// 		const batch = [
+			// 			updateDataForCreate(ContactTypeRef, firstContactListId, id1, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, firstContactListId, id2, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, secondContactListId, id3, OperationType.CREATE),
+			// 			updateDataForCreate(ContactTypeRef, secondContactListId, id4, OperationType.CREATE),
+			// 		]
+			// 		const firstContactsList = [
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [firstContactListId, id1],
+			// 				_permissions: "permissions",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 			createTestEntity(ContactTypeRef, {
+			// 				_id: [firstContactListId, id2],
+			// 				_permissions: "permissions",
+			// 				_ownerGroup: "owner-group",
+			// 			}),
+			// 		]
+			// 		when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, firstContactListId, ["id1", "id2"], anything(), anything())).thenResolve(
+			// 			await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
+			// 		)
+			//
+			// 		when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, secondContactListId, ["id3", "id4"], anything(), anything())).thenReject(
+			// 			new NotAuthorizedError("bam"),
+			// 		)
+			//
+			// 		const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
+			//
+			// 		verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, anything(), anything(), anything(), anything()), { times: 2 })
+			// 		o(await storage.get(ContactTypeRef, firstContactListId, id1)).notEquals(null)
+			// 		o(await storage.get(ContactTypeRef, firstContactListId, id2)).notEquals(null)
+			// 		o(await storage.get(ContactTypeRef, secondContactListId, id3)).equals(null)
+			// 		o(await storage.get(ContactTypeRef, secondContactListId, id4)).equals(null)
+			// 		o(updates).deepEquals(batch.slice(0, 2))
+			// 	})
+			// })
 
-					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
-					]
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything())).thenResolve(
-						await promiseMap([contact1, contact2], (contact) => toStorableInstance(contact)),
-					)
-					const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
-					verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything()), { times: 1 })
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).notEquals(null)
-					o(updates).deepEquals(batch)
-				})
-
-				if (name === "offline") {
-					// in the other case storage is an EphemeralCache which doesn't use custom handlers or caches calendar events.
-					o("entity events received should call loadMultiple when receiving updates from a postMultiple with CustomCacheHandler", async function () {
-						const event1 = createTestEntity(CalendarEventTypeRef, {
-							_id: [calendarEventListId, calendarEventIds[0]],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						})
-						const event2 = createTestEntity(CalendarEventTypeRef, {
-							_id: [calendarEventListId, calendarEventIds[1]],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						})
-						// We only consider events to be in the range if we do actually have correct range
-						await storage.setNewRangeForList(CalendarEventTypeRef, calendarEventListId, CUSTOM_MIN_ID, CUSTOM_MAX_ID)
-
-						const batch = [
-							createUpdate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0], OperationType.CREATE),
-							createUpdate(ContactTypeRef, calendarEventListId, calendarEventIds[1], OperationType.CREATE),
-						]
-
-						when(
-							entityRestClient.loadMultipleParsedInstances(
-								CalendarEventTypeRef,
-								calendarEventListId,
-								[calendarEventIds[0], calendarEventIds[1]],
-								anything(),
-								anything(),
-							),
-						).thenResolve(await promiseMap([event1, event2], (contact) => toStorableInstance(contact)))
-						const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
-						verify(
-							entityRestClient.loadMultipleParsedInstances(
-								CalendarEventTypeRef,
-								calendarEventListId,
-								[calendarEventIds[0], calendarEventIds[1]],
-								anything(),
-								anything(),
-							),
-							{ times: 1 },
-						)
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).notEquals(null)
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).notEquals(null)
-						o(updates).deepEquals(batch)
-					})
-				}
-
-				o("post multiple with different update type and list ids should make multiple load calls", async function () {
-					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id3, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id4, OperationType.CREATE),
-						createUpdate(CustomerTypeRef, null as any, id5, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.UPDATE),
-						createUpdate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0], OperationType.CREATE),
-						createUpdate(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1], OperationType.CREATE),
-					]
-
-					const calendarEvents = [
-						createTestEntity(CalendarEventTypeRef, {
-							_id: [calendarEventListId, calendarEventIds[0]],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-						createTestEntity(CalendarEventTypeRef, {
-							_id: [calendarEventListId, calendarEventIds[1]],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					const firstContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id1],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id2],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					const secondContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId2, "id3"],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId2, "id4"],
-							_permissions: "permissionId",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					when(entityRestClient.loadParsedInstance(ContactTypeRef, [contactListId1, id2])).thenResolve(
-						await toStorableInstance(
-							createTestEntity(ContactTypeRef, {
-								_id: [contactListId1, id2],
-								_permissions: "permissions",
-								_ownerGroup: "owner-group",
-							}),
-						),
-					)
-					when(entityRestClient.loadParsedInstance(CustomerTypeRef, id5)).thenResolve(
-						await toStorableInstance(
-							createTestEntity(CustomerTypeRef, {
-								_id: id5,
-								_permissions: "permissions",
-								_ownerGroup: "owner-group",
-							}),
-						),
-					)
-
-					when(
-						entityRestClient.loadMultipleParsedInstances(
-							CalendarEventTypeRef,
-							calendarEventListId,
-							[calendarEventIds[0], calendarEventIds[1]],
-							anything(),
-							anything(),
-						),
-					).thenResolve(await promiseMap(calendarEvents, (event) => toStorableInstance(event)))
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything())).thenResolve(
-						await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
-					)
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId2, ["id3", "id4"], anything(), anything())).thenResolve(
-						await promiseMap(secondContactsList, (contact) => toStorableInstance(contact)),
-					)
-
-					if (name === "offline") {
-						await storage.setNewRangeForList(CalendarEventTypeRef, calendarEventListId, CUSTOM_MIN_ID, CUSTOM_MAX_ID)
-					}
-					const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
-					verify(entityRestClient.loadParsedInstance(ContactTypeRef, ["contactListId1", "id2"]), { times: 1 }) // One load for contact update
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id3)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id4)).notEquals(null)
-					if (name === "offline") {
-						verify(entityRestClient.loadMultipleParsedInstances(anything(), anything(), anything(), anything(), anything()), { times: 3 }) // Three load multiple, one for each contact list and one for the calendar list
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).notEquals(null)(
-							"when using offline storage event 0 should be cached",
-						)
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).notEquals(null)(
-							"when using offline storage event 1 should be cached",
-						)
-					} else {
-						verify(entityRestClient.loadMultipleParsedInstances(anything(), anything(), anything(), anything(), anything()), { times: 2 }) // two load multiple, one for each contact list and none for the calendar list
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[0])).equals(null)(
-							"when using offline storage event 0 should not be cached",
-						)
-						o(await storage.get(CalendarEventTypeRef, calendarEventListId, calendarEventIds[1])).equals(null)(
-							"when using offline storage event 1 should not be cached",
-						)
-					}
-					o(await storage.get(CustomerTypeRef, null, id5)).equals(null)
-					o(filteredUpdates.length).equals(batch.length)
-					for (const update of batch) {
-						o(filteredUpdates.includes(update)).equals(true)
-					}
-				})
-
-				o("returns empty [] when loadMultiple throwing an error", async function () {
-					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id3, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id4, OperationType.CREATE),
-					]
-					const firstContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id1],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id2],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-					]
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything())).thenResolve(
-						await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
-					)
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId2, ["id3", "id4"], anything(), anything())).thenReject(
-						new NotAuthorizedError("bam"),
-					)
-
-					const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
-
-					verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, anything(), anything(), anything(), anything()), { times: 2 })
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id3)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id4)).equals(null)
-					o(updates).deepEquals(batch.slice(0, 2))
-				})
-			})
 			o.spec("post  multiple cache range", function () {
 				o("update is not in cache range", async function () {
 					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id1, null),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id2, null),
 					]
 					const updates = await cache.entityEventsReceived(batch, "batchId", groupId)
 
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).equals(null)
+					o(await storage.get(ContactTypeRef, firstContactListId, id1)).equals(null)
+					o(await storage.get(ContactTypeRef, firstContactListId, id2)).equals(null)
 					o(updates).deepEquals(batch)
 				})
 
 				o("updates partially not loaded by loadMultiple", async function () {
-					await storage.setNewRangeForList(ContactTypeRef, contactListId1, id1, id2)
+					await storage.setNewRangeForList(ContactTypeRef, firstContactListId, id1, id2)
 
+					const firstContact = createTestEntity(ContactTypeRef, {
+						_id: [firstContactListId, id1],
+						_permissions: "permissions",
+						_ownerGroup: "owner-group",
+					})
 					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id1, firstContact),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id2, null),
 					]
-
-					const contacts = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id1],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything())).thenResolve(
-						await promiseMap(contacts, (contact) => toStorableInstance(contact)),
-					)
 
 					const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
-					verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, ["id1", "id2"], anything(), anything()), { times: 1 })
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).equals(null)
+					o(await storage.get(ContactTypeRef, firstContactListId, id1)).notEquals(null)
+					o(await storage.get(ContactTypeRef, firstContactListId, id2)).equals(null)
 					o(filteredUpdates.length).equals(batch.length - 1)
 					for (const update of batch.slice(0, 1)) {
 						o(filteredUpdates.includes(update)).equals(true)
 					}
 				})
 
-				o("update are partially in cache range ", async function () {
-					await storage.setNewRangeForList(ContactTypeRef, contactListId1, id1, id1)
-					await storage.setNewRangeForList(ContactTypeRef, contactListId2, id4, id4)
+				o("update are partially in cache range", async function () {
+					await storage.setNewRangeForList(ContactTypeRef, firstContactListId, id1, id1)
+					await storage.setNewRangeForList(ContactTypeRef, secondContactListId, id4, id4)
+
+					const firstListContact = createTestEntity(ContactTypeRef, {
+						_id: [firstContactListId, id1],
+						_permissions: "permissions",
+						_ownerGroup: "owner-group",
+					})
+
+					const secondListContact = createTestEntity(ContactTypeRef, {
+						_id: [secondContactListId, id4],
+						_permissions: "permissions",
+						_ownerGroup: "owner-group",
+					})
 
 					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id3, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id4, OperationType.CREATE),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id1, firstListContact),
+						await updateDataForCreate(ContactTypeRef, firstContactListId, id2, null),
+						await updateDataForCreate(ContactTypeRef, secondContactListId, id3, null),
+						await updateDataForCreate(ContactTypeRef, secondContactListId, id4, secondListContact),
 					]
-
-					const firstContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId1, id1],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-					]
-					const secondContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: [contactListId2, id4],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, [id1], anything(), anything())).thenResolve(
-						await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
-					)
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId2, [id4], anything(), anything())).thenResolve(
-						await promiseMap(secondContactsList, (contact) => toStorableInstance(contact)),
-					)
-
 					const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
-					verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, anything(), anything(), anything(), anything()), { times: 2 })
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id3)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id4)).notEquals(null)
+					o(removeOriginals(assertNotNull(await storage.get(ContactTypeRef, firstContactListId, id1)))).deepEquals(firstListContact)
+					o(removeOriginals(assertNotNull(await storage.get(ContactTypeRef, secondContactListId, id4)))).deepEquals(secondListContact)
+					o(await storage.get(ContactTypeRef, firstContactListId, id2)).equals(null)
+					o(await storage.get(ContactTypeRef, secondContactListId, id3)).equals(null)
 					o(filteredUpdates.length).equals(batch.length)
 					for (const update of batch) {
 						o(filteredUpdates.includes(update)).equals(true)
 					}
 				})
-				o("update  partially results in NotAuthorizedError ", async function () {
-					await storage.setNewRangeForList(ContactTypeRef, contactListId1, id1, id1)
-					await storage.setNewRangeForList(ContactTypeRef, contactListId2, id4, id4)
 
-					const batch = [
-						createUpdate(ContactTypeRef, contactListId1, id1, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId1, id2, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id3, OperationType.CREATE),
-						createUpdate(ContactTypeRef, contactListId2, id4, OperationType.CREATE),
-					]
-
-					const firstContactsList = [
-						createTestEntity(ContactTypeRef, {
-							_id: ["contactListId1", id1],
-							_permissions: "permissions",
-							_ownerGroup: "owner-group",
-						}),
-					]
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId1, [id1], anything(), anything())).thenResolve(
-						await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
-					)
-
-					when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, contactListId2, [id4], anything(), anything())).thenReject(
-						new NotAuthorizedError("bam"),
-					)
-
-					const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
-
-					verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, anything(), anything(), anything(), anything()), { times: 2 })
-					o(await storage.get(ContactTypeRef, contactListId1, id1)).notEquals(null)
-					o(await storage.get(ContactTypeRef, contactListId1, id2)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id3)).equals(null)
-					o(await storage.get(ContactTypeRef, contactListId2, id4)).equals(null)
-					o(filteredUpdates.length).equals(batch.length - 1)
-					for (const update of batch.slice(0, 3)) {
-						o(filteredUpdates.includes(update)).equals(true)
-					}
-				})
+				// TODO: since we do not request any instances from entityEventsReceived, this test can be moved to EventBusClientTest?
+				// o("update  partially results in NotAuthorizedError ", async function () {
+				// 	await storage.setNewRangeForList(ContactTypeRef, firstContactListId, id1, id1)
+				// 	await storage.setNewRangeForList(ContactTypeRef, secondContactListId, id4, id4)
+				//
+				// 	const batch = [
+				// 		await updateDataForCreate(ContactTypeRef, firstContactListId, id1, OperationType.CREATE),
+				// 		await updateDataForCreate(ContactTypeRef, firstContactListId, id2, OperationType.CREATE),
+				// 		await updateDataForCreate(ContactTypeRef, secondContactListId, id3, OperationType.CREATE),
+				// 		await updateDataForCreate(ContactTypeRef, secondContactListId, id4, OperationType.CREATE),
+				// 	]
+				//
+				// 	const firstContactsList = [
+				// 		createTestEntity(ContactTypeRef, {
+				// 			_id: ["contactListId1", id1],
+				// 			_permissions: "permissions",
+				// 			_ownerGroup: "owner-group",
+				// 		}),
+				// 	]
+				//
+				// 	when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, firstContactListId, [id1], anything(), anything())).thenResolve(
+				// 		await promiseMap(firstContactsList, (contact) => toStorableInstance(contact)),
+				// 	)
+				//
+				// 	when(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, secondContactListId, [id4], anything(), anything())).thenReject(
+				// 		new NotAuthorizedError("bam"),
+				// 	)
+				//
+				// 	const filteredUpdates = await cache.entityEventsReceived(batch, "batchId", groupId)
+				//
+				// 	verify(entityRestClient.loadMultipleParsedInstances(ContactTypeRef, anything(), anything(), anything(), anything()), { times: 2 })
+				// 	o(await storage.get(ContactTypeRef, firstContactListId, id1)).notEquals(null)
+				// 	o(await storage.get(ContactTypeRef, firstContactListId, id2)).equals(null)
+				// 	o(await storage.get(ContactTypeRef, secondContactListId, id3)).equals(null)
+				// 	o(await storage.get(ContactTypeRef, secondContactListId, id4)).equals(null)
+				// 	o(filteredUpdates.length).equals(batch.length - 1)
+				// 	for (const update of batch.slice(0, 3)) {
+				// 		o(filteredUpdates.includes(update)).equals(true)
+				// 	}
+				// })
 			})
-			o("element create notifications are not loaded from server", async function () {
-				await cache.entityEventsReceived([createUpdate(MailBoxTypeRef, null as any, "id1", OperationType.CREATE)], "batchId", groupId)
+			o.test("element create notifications are not loaded from server", async function () {
+				await cache.entityEventsReceived([await updateDataForCreate(MailBoxTypeRef, null as any, "id1", null)], "batchId", groupId)
+			})
+
+			o.test("Create event for new entity is received, it should not be downloaded - when update has instance attached", async () => {
+				const blob = createMailDetailsBlobInstance("blobListId", "blobId", "test storage")
+				let blobUpdate = await updateDataForCreate(MailDetailsBlobTypeRef, listIdPart(blob._id), elementIdPart(blob._id), blob)
+
+				await storage.setNewRangeForList(MailDetailsBlobTypeRef, blobUpdate.instanceListId, GENERATED_MIN_ID, GENERATED_MAX_ID)
+				await cache.entityEventsReceived(Array.of(blobUpdate), batchId, groupId)
+
+				const blobFromStorage = await storage.get(MailDetailsBlobTypeRef, blobUpdate.instanceListId, blobUpdate.instanceId)
+				o(blob).deepEquals(assertNotNull(removeOriginals(blobFromStorage)))
+			})
+
+			o.test("Create event with customCacheHandler should use instance attached to event", async () => {
+				const customCacheHandler: CustomCacheHandler<MailDetailsBlob> = {
+					shouldLoadOnCreateEvent: () => true,
+				}
+				when(customCacheHandlerMap.get(MailDetailsBlobTypeRef)).thenReturn(customCacheHandler)
+
+				const blob = createMailDetailsBlobInstance("blobListId", "blobId", "test storage")
+				let blobUpdate = await updateDataForCreate(MailDetailsBlobTypeRef, listIdPart(blob._id), elementIdPart(blob._id), blob)
+
+				await storage.setNewRangeForList(MailDetailsBlobTypeRef, blobUpdate.instanceListId, GENERATED_MIN_ID, GENERATED_MAX_ID)
+				await cache.entityEventsReceived(Array.of(blobUpdate), batchId, groupId)
+
+				verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, blob._id, anything()), { times: 0 })
+				const blobFromStorage = await storage.get(MailDetailsBlobTypeRef, blobUpdate.instanceListId, blobUpdate.instanceId)
+				o(blob).deepEquals(assertNotNull(removeOriginals(blobFromStorage)))
+			})
+
+			o.test("Update event on cached entity - instance should not be redownloaded when patches are attached", async () => {
+				const blob = createMailDetailsBlobInstance("blobListId", "blobId", "say hello")
+
+				await storage.put(MailDetailsBlobTypeRef, await toStorableInstance(blob))
+
+				// with empty patches
+				{
+					const blobUpdate = await updateDataForUpdate(MailDetailsBlobTypeRef, listIdPart(blob._id), elementIdPart(blob._id), [])
+					await cache.entityEventsReceived(Array.of(blobUpdate), batchId, groupId)
+					const blobFromStorage = await storage.get(MailDetailsBlobTypeRef, blobUpdate.instanceListId, blobUpdate.instanceId)
+					o(blob).deepEquals(removeOriginals(blobFromStorage)!)
+					verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, blob._id, anything()), { times: 0 })
+				}
+
+				// with non-empty patches
+				{
+					const replaceTextPatch = createPatch({
+						patchOperation: PatchOperationType.REPLACE,
+						value: "from patch",
+						attributePath: AttributeModel.getAttributeId(
+							await typeModelResolver.resolveClientTypeReference(blob.details.body._type),
+							"text",
+						)!.toString(),
+					})
+					const blobUpdate = await updateDataForUpdate(
+						MailDetailsBlobTypeRef,
+						listIdPart(blob._id),
+						elementIdPart(blob._id),
+						Array.of(replaceTextPatch),
+					)
+					await cache.entityEventsReceived([blobUpdate], batchId, groupId)
+					const mailFromStorage = await storage.get(MailDetailsBlobTypeRef, blobUpdate.instanceListId, blobUpdate.instanceId)
+					o("from patch").deepEquals(mailFromStorage!.details.body.text!)
+					verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, blob._id, anything()), { times: 0 })
+				}
 			})
 
 			o("element update notifications are not put into cache", async function () {
-				await cache.entityEventsReceived([createUpdate(MailBoxTypeRef, null as any, "id1", OperationType.UPDATE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForUpdate(MailBoxTypeRef, null as any, "id1", [])], "batchId", groupId)
 			})
 
 			// element notifications
-			o("Update event for cached entity is received, it should be redownloaded", async function () {
-				const archiveId = "archiveId"
-				const mailDetailsId = "detailsId1"
-				let mailDetailsBlob = createMailDetailsBlobInstance(archiveId, mailDetailsId, "hello")
-				await storage.put(MailDetailsBlobTypeRef, await toStorableInstance(mailDetailsBlob))
-
-				when(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)])).thenResolve(
-					await toStorableInstance(createMailDetailsBlobInstance(archiveId, createId(mailDetailsId), "goodbye")),
-				)
-				await cache.entityEventsReceived(
-					[createUpdate(MailDetailsBlobTypeRef, archiveId, createId(mailDetailsId), OperationType.UPDATE)],
-					"batchId",
-					groupId,
-				)
-				verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)]), { times: 1 })
-				const blob = await cache.load(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)])
-				o(blob.details.body.text).equals("goodbye")
-				verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)]), { times: 1 })
-			})
-
-			// element notifications
+			// TODO: does this test makes sense now that we don't try to download anything if we get an update event
 			o("When update event for cached entity is received but it can't be downloaded it is removed from cache", async function () {
 				const archiveId = "archiveId"
 				const mailDetailsId = "detailsId1"
@@ -647,7 +715,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 
 				when(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)])).thenReject(new NotFoundError("test!"))
 				await cache.entityEventsReceived(
-					[createUpdate(MailDetailsBlobTypeRef, archiveId, createId(mailDetailsId), OperationType.UPDATE)],
+					[await updateDataForUpdate(MailDetailsBlobTypeRef, archiveId, createId(mailDetailsId), [])],
 					"batchId",
 					groupId,
 				)
@@ -671,8 +739,8 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				// The moved mail will not be loaded from the server
 				await cache.entityEventsReceived(
 					[
-						createUpdate(MailSetEntryTypeRef, getListId(instance), getElementId(instance), OperationType.DELETE),
-						createUpdate(MailSetEntryTypeRef, newListId, getElementId(instance), OperationType.CREATE),
+						await updateDataForDelete(MailSetEntryTypeRef, getListId(instance), getElementId(instance)),
+						await updateDataForDelete(MailSetEntryTypeRef, newListId, getElementId(instance)),
 					],
 					"batchId",
 					groupId,
@@ -694,11 +762,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				await storage.put(MailDetailsBlobTypeRef, await toStorableInstance(mailDetailsBlob))
 
 				when(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, mailDetailsBlob._id, anything())).thenReject(new NotFoundError("not found"))
-				await cache.entityEventsReceived(
-					[createUpdate(MailDetailsBlobTypeRef, archiveId, createId(mailDetailsId), OperationType.DELETE)],
-					"batchId",
-					groupId,
-				)
+				await cache.entityEventsReceived([await updateDataForDelete(MailDetailsBlobTypeRef, archiveId, createId(mailDetailsId))], "batchId", groupId)
 				// entity is not loaded from server when it is deleted
 				verify(entityRestClient.loadParsedInstance(MailDetailsBlobTypeRef, mailDetailsBlob._id, anything()), { times: 0 })
 				await assertThrows(NotFoundError, () => cache.load(MailDetailsBlobTypeRef, [archiveId, createId(mailDetailsId)]))
@@ -729,8 +793,8 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				// Move mail event: we don't try to load the mail again, we just update our cached mail
 				await cache.entityEventsReceived(
 					[
-						createUpdate(MailSetEntryTypeRef, getListId(mailSetEntries[0]), getElementId(mailSetEntries[0]), OperationType.DELETE),
-						createUpdate(MailSetEntryTypeRef, newListId, getElementId(mailSetEntries[0]), OperationType.CREATE),
+						await updateDataForDelete(MailSetEntryTypeRef, getListId(mailSetEntries[0]), getElementId(mailSetEntries[0])),
+						await updateDataForCreate(MailSetEntryTypeRef, newListId, getElementId(mailSetEntries[0]), null),
 					],
 					"batchId",
 					groupId,
@@ -765,8 +829,8 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				// Move mail event: we don't try to load the mail again, we just update our cached mail
 				await cache.entityEventsReceived(
 					[
-						createUpdate(MailSetEntryTypeRef, "listId1", getElementId(mailSetEntries[2]), OperationType.DELETE),
-						createUpdate(MailSetEntryTypeRef, "listId2", getElementId(mailSetEntries[2]), OperationType.CREATE),
+						await updateDataForDelete(MailSetEntryTypeRef, "listId1", getElementId(mailSetEntries[2])),
+						await updateDataForCreate(MailSetEntryTypeRef, "listId2", getElementId(mailSetEntries[2]), null),
 					],
 					"batchId",
 					groupId,
@@ -790,7 +854,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				await storage.put(MailTypeRef, await toStorableInstance(mail))
 				await storage.put(MailDetailsBlobTypeRef, await toStorableInstance(mailDetailsBlob))
 
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, getListId(mail), getElementId(mail), OperationType.DELETE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForDelete(MailTypeRef, getListId(mail), getElementId(mail))], "batchId", groupId)
 
 				o(await storage.get(MailTypeRef, getListId(mail), getElementId(mail))).equals(null)
 				o(await storage.get(MailDetailsBlobTypeRef, getListId(mailDetailsBlob), getElementId(mailDetailsBlob))).equals(null)
@@ -798,7 +862,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 
 			// list element notifications
 			o("when the list is not cached, mail create notifications are not put into cache", async function () {
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, "listId1", createId("id1"), OperationType.CREATE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForCreate(MailTypeRef, "listId1", createId("id1"), null)], "batchId", groupId)
 			})
 
 			o("when the list is not cached but there is a custom cache handler, mail create notifications are put into cache", async function () {
@@ -810,13 +874,13 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 				when(entityRestClient.loadParsedInstance(MailTypeRef, mail._id)).thenResolve(await toStorableInstance(mail))
 				when(entityRestClient.load(MailTypeRef, mail._id)).thenResolve(mail)
 
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, getListId(mail), getElementId(mail), OperationType.CREATE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForCreate(MailTypeRef, getListId(mail), getElementId(mail), mail)], "batchId", groupId)
 
 				o(removeOriginals(await storage.get(MailTypeRef, getListId(mail), getElementId(mail)))).deepEquals(mail)
 			})
 
 			o("list element update notifications are not put into cache", async function () {
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, "listId1", createId("id1"), OperationType.UPDATE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForUpdate(MailTypeRef, "listId1", createId("id1"), [])], "batchId", groupId)
 			})
 
 			o("list element is updated in cache", async function () {
@@ -827,7 +891,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 
 				when(entityRestClient.loadParsedInstance(MailTypeRef, initialMail._id)).thenResolve(await toStorableInstance(mailUpdate))
 
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, "listId1", createId("id1"), OperationType.UPDATE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForUpdate(MailTypeRef, "listId1", createId("id1"), [])], "batchId", groupId)
 				verify(entityRestClient.loadParsedInstance(MailTypeRef, initialMail._id), { times: 1 })
 
 				const mail = await cache.load(MailTypeRef, ["listId1", createId("id1")])
@@ -838,7 +902,7 @@ export function testEntityRestCache(name: string, getStorage: (userId: Id, custo
 			o("when deleted from a range, then the remaining range will still be retrieved from the cache", async function () {
 				const originalMails = await setupMailList(true, true)
 				// no load should be called
-				await cache.entityEventsReceived([createUpdate(MailTypeRef, "listId1", createId("id2"), OperationType.DELETE)], "batchId", groupId)
+				await cache.entityEventsReceived([await updateDataForDelete(MailTypeRef, "listId1", createId("id2"))], "batchId", groupId)
 				const mails = await cache.loadRange(MailTypeRef, "listId1", GENERATED_MIN_ID, 4, false)
 				// The entity is provided from the cache
 				mails.map(removeOriginals)

@@ -610,9 +610,17 @@ export class EventBusClient {
 			for (const [listId, elementIds] of groupedListIds.entries()) {
 				if (elementIds.length > 1) {
 					const typeRef = new TypeRef<any>(typeref.split("/")[0] as AppName, parseInt(typeref.split("/")[1]))
-					const instances = await this.entity.loadMultiple(typeRef, listId, elementIds)
-					if (isSameTypeRef(MailTypeRef, typeRef)) {
-						await this.fetchMailDetailsBlob(instances)
+					try {
+						const instances = await this.entity.loadMultiple(typeRef, listId, elementIds)
+						if (isSameTypeRef(MailTypeRef, typeRef)) {
+							await this.fetchMailDetailsBlob(instances)
+						}
+					} catch (e) {
+						if (e instanceof NotAuthorizedError) {
+							console.log(`could not preload, probably lost group membership for list ${typeref}/${listId}`)
+						} else {
+							console.warn(`failed to preload ${typeref}/${listId}`, e)
+						}
 					}
 				}
 			}
