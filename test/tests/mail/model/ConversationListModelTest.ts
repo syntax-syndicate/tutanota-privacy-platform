@@ -36,7 +36,7 @@ import { EntityUpdateData } from "../../../../src/common/api/common/utils/Entity
 import { MailboxDetail } from "../../../../src/common/mailFunctionality/MailboxModel"
 import { GroupInfoTypeRef, GroupTypeRef } from "../../../../src/common/api/entities/sys/TypeRefs"
 import { ConnectionError } from "../../../../src/common/api/common/error/RestError"
-import { clamp, lastThrow, pad } from "@tutao/tutanota-utils"
+import { assertNotNull, clamp, lastThrow, pad } from "@tutao/tutanota-utils"
 import { LoadedMail } from "../../../../src/mail-app/mail/model/MailSetListModel"
 import { ConversationListModel } from "../../../../src/mail-app/mail/model/ConversationListModel"
 import { ListLoadingState } from "../../../../src/common/gui/base/List"
@@ -348,8 +348,7 @@ o.spec("ConversationListModel", () => {
 		o(mail).equals(null)
 
 		// Should now be loaded
-		const loadedMail = await model.loadAndSelect(unloadedMail, () => false)
-		o(loadedMail).notEquals(null)
+		const loadedMail = assertNotNull(await model.loadAndSelect(unloadedMail, () => false))
 		o(loadedMail).equals(model.getMail(unloadedMail))
 	})
 
@@ -375,7 +374,7 @@ o.spec("ConversationListModel", () => {
 		)
 
 		await model.handleEntityUpdate(entityUpdateData)
-		o.check(model._getConversationMap().get(listIdPart(mail.conversationEntry))!.mails).deepEquals([elementIdPart(mailSetEntryId)])
+		o.check(model._getConversationMap().get(listIdPart(mail.conversationEntry))?.getDisplayedMail()!.mailSetEntryId).deepEquals(mailSetEntryId)
 	})
 
 	o.spec("handleEntityUpdate", () => {
@@ -386,11 +385,11 @@ o.spec("ConversationListModel", () => {
 			// Overwrite one of the mails inside the list so it has both labels
 			const someIndex = 50 // a random number
 			const someMail: LoadedMail = {
-				...model._getMailMap().get(elementIdPart(makeMailId(someIndex)))!,
+				...model._getLoadedMail(elementIdPart(makeMailId(someIndex)))!,
 				labels: [labels[0], labels[1]],
 			}
 			someMail.mail.sets.push(labels[1]._id)
-			model._updateMails([someMail])
+			model._insertOrUpdateLoadedMails([someMail])
 			o(model.getLabelsForMail(someMail.mail)[1]).deepEquals(labels[1])
 
 			// Change one of the labels (but not inside the mail we just updated)
@@ -438,7 +437,7 @@ o.spec("ConversationListModel", () => {
 			await setUpTestData(PageSize, labels, false, 1)
 			await model.loadInitial()
 			const someIndex = 22 // a random number
-			const someMail: LoadedMail = model._getMailMap().get(elementIdPart(makeMailId(someIndex)))!
+			const someMail: LoadedMail = model._getLoadedMail(elementIdPart(makeMailId(someIndex)))!
 
 			const entityUpdateData: EntityUpdateData = {
 				typeRef: MailSetEntryTypeRef,
