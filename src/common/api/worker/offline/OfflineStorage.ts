@@ -530,6 +530,8 @@ export class OfflineStorage implements CacheStorage {
 		await this.sqlCipherFacade.run(formattedQuery.query, formattedQuery.params)
 	}
 
+	putMultiple(typeRef: TypeRef<unknown>, instances: ServerModelParsedInstance[]): Promise<void> {}
+
 	async setLowerRangeForList<T extends ListElementEntity>(typeRef: TypeRef<T>, listId: Id, lowerId: Id): Promise<void> {
 		let typeModel = await this.typeModelResolver.resolveClientTypeReference(typeRef)
 		lowerId = ensureBase64Ext(typeModel, lowerId)

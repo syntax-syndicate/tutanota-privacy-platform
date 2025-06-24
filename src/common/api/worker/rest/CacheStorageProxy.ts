@@ -174,6 +174,10 @@ export class LateInitializedCacheStorageImpl implements CacheStorageLateInitiali
 		return this.inner.put(typeRef, instance)
 	}
 
+	putMultiple(typeRef: TypeRef<unknown>, instances: ServerModelParsedInstance[]): Promise<void> {
+		return this.inner.putMultiple(typeRef, instances)
+	}
+
 	putLastBatchIdForGroup(groupId: Id, batchId: Id): Promise<void> {
 		return this.inner.putLastBatchIdForGroup(groupId, batchId)
 	}

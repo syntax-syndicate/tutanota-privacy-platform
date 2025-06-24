@@ -254,6 +254,12 @@ export class EphemeralCacheStorage implements CacheStorage {
 		}
 	}
 
+	async putMultiple(typeRef: TypeRef<unknown>, instances: ServerModelParsedInstance[]): Promise<void> {
+		for (const instance of instances) {
+			await this.put(typeRef, instance)
+		}
+	}
+
 	private async putBlobElement(typeRef: TypeRef<unknown>, listId: Id, elementId: Id, entity: ServerModelParsedInstance) {
 		const cache = this.blobEntities.get(getTypeString(typeRef))?.get(listId)
 		if (cache == null) {

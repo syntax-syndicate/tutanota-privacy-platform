@@ -9,7 +9,7 @@ import {
 	OwnerEncSessionKeyProvider,
 } from "./EntityRestClient"
 import { OperationType } from "../../common/TutanotaConstants"
-import { assertNotNull, getFirstOrThrow, getTypeString, groupBy, isSameTypeRef, lastThrow, TypeRef } from "@tutao/tutanota-utils"
+import { assertNotNull, downcast, getFirstOrThrow, getTypeString, groupBy, isSameTypeRef, lastThrow, TypeRef } from "@tutao/tutanota-utils"
 import {
 	AuditLogEntryTypeRef,
 	BucketPermissionTypeRef,
@@ -215,6 +215,8 @@ export interface CacheStorage extends ExposedCacheStorage {
 
 	put(typeRef: TypeRef<unknown>, instance: ServerModelParsedInstance): Promise<void>
 
+	putMultiple(typeRef: TypeRef<unknown>, instances: ServerModelParsedInstance[]): Promise<void>
+
 	getRangeForList<T extends ListElementEntity>(typeRef: TypeRef<T>, listId: Id): Promise<Range | null>
 
 	setUpperRangeForList<T extends ListElementEntity>(typeRef: TypeRef<T>, listId: Id, id: Id): Promise<void>
@@ -396,12 +398,19 @@ export class DefaultEntityRestCache implements EntityRestCache {
 		let idsToLoad: Id[]
 		if (cachingBehavior.readsFromCache) {
 			idsToLoad = []
-			for (const id of ids) {
-				const cachedEntity = await this.storage.getParsed(typeRef, listId, id)
-				if (cachedEntity != null) {
-					entitiesInCache.push(cachedEntity)
-				} else {
-					idsToLoad.push(id)
+			if (listId) {
+				const typeModel = await this.typeModelResolver.resolveClientTypeReference(typeRef)
+				entitiesInCache.push(...(await this.storage.provideMultipleParsed(typeRef, listId, ids)))
+				const loadedIds = new Set(entitiesInCache.map((e) => downcast<Id>(AttributeModel.getAttribute(e, "_id", typeModel))))
+				idsToLoad.push(...ids.filter((id) => !loadedIds.has(id)))
+			} else {
+				for (const id of ids) {
+					const cachedEntity = await this.storage.getParsed(typeRef, listId, id)
+					if (cachedEntity != null) {
+						entitiesInCache.push(cachedEntity)
+					} else {
+						idsToLoad.push(id)
+					}
 				}
 			}
 		} else {
@@ -411,9 +420,7 @@ export class DefaultEntityRestCache implements EntityRestCache {
 		if (idsToLoad.length > 0) {
 			const entitiesFromServer = await this.entityRestClient.loadMultipleParsedInstances(typeRef, listId, idsToLoad, ownerEncSessionKeyProvider, opts)
 			if (cachingBehavior.writesToCache) {
-				for (const entity of entitiesFromServer) {
-					await this.storage.put(typeRef, entity)
-				}
+				await this.storage.putMultiple(typeRef, entitiesFromServer)
 			}
 			entitiesInCache = entitiesFromServer.concat(entitiesInCache)
 		}
@@ -650,8 +657,7 @@ export class DefaultEntityRestCache implements EntityRestCache {
 				)
 			}
 		}
-
-		await Promise.all(elementsToAdd.map((element) => this.storage.put(typeRef, element)))
+		await this.storage.putMultiple(typeRef, elementsToAdd)
 	}
 
 	/**
