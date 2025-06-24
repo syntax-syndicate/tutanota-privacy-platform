@@ -1,0 +1,71 @@
+// run as:
+// node --import ./import-hooks.js node_modules/.bin/eslint . --cache --cache-location cache/eslint
+
+import module from "node:module"
+import fs from "node:fs"
+
+const fromParentToChild = new Map()
+
+function getOrSet(key) {
+	let arr = fromParentToChild.get(key)
+	if (arr != null) {
+		return arr
+	}
+	arr = []
+	fromParentToChild.set(key, arr)
+	return arr
+}
+
+export function resolve(specifier, context, nextResolve) {
+	const resolved = nextResolve(specifier, context)
+	console.log("resolved", specifier, "to", resolved?.url, "from", context.parentURL)
+	// fromChildToParent.set(specifier, context.parentURL)
+	const children = getOrSet(context.parentURL)
+	children.push(resolved.url)
+	return resolved
+}
+
+export function load(url, context, nextLoad) {
+	console.log("loading", url)
+
+	return nextLoad(url, context)
+}
+
+module.registerHooks({
+	resolve,
+	// load
+})
+
+function printMap(rootIds, visited = new Set(), indentation = 0) {
+	const data = {}
+	for (const rootId of rootIds) {
+		if (visited.has(rootId)) {
+			// console.log(" ".repeat(indentation), "[CYCLE]", rootId)
+			if (data[rootId] == null) {
+				data[rootId] = `[CYCLE ${rootId}]`
+			}
+			continue
+		}
+		visited.add(rootId)
+		// console.log(" ".repeat(indentation), "[[[", rootId ?? "[ROOT]")
+		const children = fromParentToChild.get(rootId)
+		if (rootId && rootId.startsWith("node:")) {
+			data[rootId] = "[BUILTIN]"
+		} else if (children) {
+			const newVisited = new Set(visited)
+			newVisited.add(rootId)
+			data[rootId] = printMap(children, newVisited, indentation + 1)
+			// console.log(" ".repeat(indentation), "]]]`", rootId)
+		} else {
+			data[rootId] = {}
+		}
+	}
+	return data
+}
+
+process.on("beforeExit", async () => {
+	const data = printMap([undefined])
+	console.log(data)
+	await fs.promises.writeFile("eslint-import.json", JSON.stringify(data, null, 4))
+	process.exit(0)
+})
