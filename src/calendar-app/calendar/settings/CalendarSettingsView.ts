@@ -10,7 +10,7 @@ import { ViewSlider } from "../../../common/gui/nav/ViewSlider.js"
 import { ColumnType, ViewColumn } from "../../../common/gui/base/ViewColumn.js"
 import { SettingsFolder } from "../../../common/settings/SettingsFolder.js"
 import { LazyLoaded, lazyStringValue } from "@tutao/tutanota-utils"
-import { FeatureType, GroupType } from "../../../common/api/common/TutanotaConstants.js"
+import { FeatureType, GroupType, shouldHideBusinessPlans } from "../../../common/api/common/TutanotaConstants.js"
 import { BootIcons } from "../../../common/gui/base/icons/BootIcons.js"
 import { LoginSettingsViewer } from "../../../common/settings/login/LoginSettingsViewer.js"
 import { Icons } from "../../../common/gui/base/icons/Icons.js"
@@ -307,7 +307,7 @@ export class CalendarSettingsView extends BaseTopLevelView implements TopLevelVi
 			),
 		)
 
-		if (!this.logins.isEnabled(FeatureType.WhitelabelChild) && !isIOSApp()) {
+		if (!this.logins.isEnabled(FeatureType.WhitelabelChild) && !shouldHideBusinessPlans()) {
 			this.adminFolders.push(
 				new SettingsFolder(
 					() => "whitelabel_label",

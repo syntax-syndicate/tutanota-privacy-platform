@@ -29,6 +29,7 @@ import {
 	PaymentMethodType,
 	PlanType,
 	PlanTypeToName,
+	shouldHideBusinessPlans,
 } from "../api/common/TutanotaConstants.js"
 import { px, size } from "../gui/size.js"
 import { LoginButton, LoginButtonAttrs } from "../gui/base/buttons/LoginButton.js"
@@ -150,7 +151,7 @@ export class SubscriptionSelector implements Component<SubscriptionSelectorAttr>
 		const onlyBusinessPlansAccepted = acceptedPlans.every((plan) => NewBusinessPlans.includes(plan))
 		const onlyPersonalPlansAccepted = acceptedPlans.every((plan) => NewPersonalPlans.includes(plan))
 		// Show the business segmentControl for signup, if both personal & business plans are allowed
-		const showBusinessSelector = !onlyBusinessPlansAccepted && !onlyPersonalPlansAccepted && !isIOSApp()
+		const showBusinessSelector = !onlyBusinessPlansAccepted && !onlyPersonalPlansAccepted && !shouldHideBusinessPlans()
 
 		const isApplePrice = shouldShowApplePrices(accountingInfo)
 		const hasCampaign = isApplePrice

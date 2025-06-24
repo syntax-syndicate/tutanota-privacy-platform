@@ -7,6 +7,7 @@ import {
 	AccountType,
 	AvailablePlanType,
 	BookingFailureReason,
+	canSubscribeToPlan,
 	Const,
 	getPaymentMethodType,
 	InvoiceData,
@@ -16,6 +17,7 @@ import {
 	PaymentMethodType,
 	PlanType,
 	PlanTypeToName,
+	shouldHideBusinessPlans,
 	UnsubscribeFailureReason,
 } from "../api/common/TutanotaConstants"
 import { SubscriptionActionButtons, SubscriptionSelector } from "./SubscriptionSelector"
@@ -102,7 +104,7 @@ export async function showSwitchDialog(
 					msg: reason,
 					boxWidth: 230,
 					boxHeight: 270,
-					acceptedPlans: acceptedPlans,
+					acceptedPlans: acceptedPlans.filter(canSubscribeToPlan),
 					currentPlanType: currentPlanInfo.planType,
 					accountingInfo,
 					allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,

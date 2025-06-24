@@ -17,7 +17,7 @@ import { GroupListView } from "./groups/GroupListView.js"
 import { WhitelabelSettingsViewer } from "../../common/settings/whitelabel/WhitelabelSettingsViewer"
 import { Icons } from "../../common/gui/base/icons/Icons"
 import { theme } from "../../common/gui/theme"
-import { FeatureType, GroupType, LegacyPlans } from "../../common/api/common/TutanotaConstants"
+import { FeatureType, GroupType, LegacyPlans, shouldHideBusinessPlans } from "../../common/api/common/TutanotaConstants"
 import { BootIcons } from "../../common/gui/base/icons/BootIcons"
 import { locator } from "../../common/api/main/CommonLocator"
 import { SubscriptionViewer } from "../../common/subscription/SubscriptionViewer"
@@ -445,7 +445,7 @@ export class SettingsView extends BaseTopLevelView implements TopLevelView<Setti
 				),
 			)
 
-			if (!this.logins.isEnabled(FeatureType.WhitelabelChild) && !isIOSApp()) {
+			if (!this.logins.isEnabled(FeatureType.WhitelabelChild) && !shouldHideBusinessPlans()) {
 				this._adminFolders.push(
 					new SettingsFolder(
 						() => "whitelabel_label",

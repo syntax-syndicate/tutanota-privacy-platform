@@ -10,7 +10,7 @@ import { Dialog, DialogType } from "../gui/base/Dialog"
 import type { WizardPageAttrs, WizardPageN } from "../gui/base/WizardDialog.js"
 import { emitWizardEvent, WizardEventType } from "../gui/base/WizardDialog.js"
 import { DefaultAnimationTime } from "../gui/animation/Animations"
-import { Keys, NewBusinessPlans, PlanType, SubscriptionType } from "../api/common/TutanotaConstants"
+import { Keys, NewBusinessPlans, PlanType, shouldHideBusinessPlans, SubscriptionType } from "../api/common/TutanotaConstants"
 import { Checkbox } from "../gui/base/Checkbox.js"
 import { UpgradePriceType } from "./FeatureListProvider"
 import { asPaymentInterval, PaymentInterval } from "./PriceUtils.js"
@@ -301,7 +301,7 @@ export class VariantCSubscriptionPageAttrs implements WizardPageAttrs<UpgradeSub
 		return false
 	}
 
-	public rightAction = isIOSApp()
+	public rightAction = shouldHideBusinessPlans()
 		? undefined
 		: (update: VoidFunction): ButtonAttrs => {
 				return getPrivateBusinessSwitchButton(this.data.options.businessUse, update)
