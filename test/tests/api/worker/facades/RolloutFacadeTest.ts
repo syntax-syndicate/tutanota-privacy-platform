@@ -32,7 +32,7 @@ o.spec("RolloutFacadeTest", function () {
 		const result = await rolloutFacade.processRollout(RolloutType.UserIdentityKeyCreation, () => {
 			return Promise.resolve(expectedReturnValue)
 		})
-		o(result).equals(expectedReturnValue)
+		o(result).deepEquals({ executed: true, result: expectedReturnValue })
 	})
 
 	o("processRollout() does not execute a rollout not scheduled", async function () {
@@ -46,6 +46,6 @@ o.spec("RolloutFacadeTest", function () {
 			// no scheduled rollout for this type, so this should not be run.
 			return Promise.resolve(notExpectedReturnValue)
 		})
-		o(result).equals(null)
+		o(result).deepEquals({ executed: false })
 	})
 })

@@ -510,29 +510,21 @@ o.spec("KeyRotationFacade", function () {
 	})
 
 	o.spec("initialize", function () {
-		o("When a key rotation for the admin group exists on the server, the password key is saved in the facade", async function () {
-			when(serviceExecutorMock.get(GroupKeyRotationInfoService, anything())).thenResolve(
-				createTestEntity(GroupKeyRotationInfoGetOutTypeRef, {
-					userOrAdminGroupKeyRotationScheduled: true,
-					groupKeyUpdates: [],
-				}),
-			)
-			await keyRotationFacade.initialize(pwKey, true)
+		o(
+			"When the user is already on a modern KDF, the user or admin group key rotation can take place and the password key is saved in the facade",
+			async function () {
+				await keyRotationFacade.initGroupKeyRotations(pwKey, true)
+				o(keyRotationFacade.pendingKeyRotations.pwKey).deepEquals(pwKey)
+			},
+		)
 
-			o(keyRotationFacade.pendingKeyRotations.pwKey).deepEquals(pwKey)
-		})
-
-		o("When a key rotation for the admin group does not exist on the server, the password key is not saved in the facade", async function () {
-			when(serviceExecutorMock.get(GroupKeyRotationInfoService, anything())).thenResolve(
-				createTestEntity(GroupKeyRotationInfoGetOutTypeRef, {
-					userOrAdminGroupKeyRotationScheduled: false,
-					groupKeyUpdates: [],
-				}),
-			)
-			await keyRotationFacade.initialize(pwKey, true)
-
-			o(keyRotationFacade.pendingKeyRotations.pwKey).equals(null)
-		})
+		o(
+			"When the user is still not on a modern KDF, the user or admin group key rotation cannot take place so the password key is not saved in the facade",
+			async function () {
+				await keyRotationFacade.initGroupKeyRotations(pwKey, false)
+				o(keyRotationFacade.pendingKeyRotations.pwKey).equals(null)
+			},
+		)
 	})
 
 	o.spec("loadPendingKeyRotations", function () {

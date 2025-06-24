@@ -28,7 +28,7 @@ import {
 	TakeOverDeletedAddressService,
 	VerifierTokenService,
 } from "../../entities/sys/Services"
-import { asKdfType, CloseEventBusOption, Const, DEFAULT_KDF_TYPE, KdfType } from "../../common/TutanotaConstants"
+import { asKdfType, CloseEventBusOption, Const, DEFAULT_KDF_TYPE, KdfType, RolloutType } from "../../common/TutanotaConstants"
 import {
 	Challenge,
 	createChangeKdfPostIn,
@@ -171,6 +171,7 @@ export interface LoginListener {
 	 * Partial login reached (offline or online login), user can be accessed but network requests might fail.
 	 */
 	onPartialLoginSuccess(sessionType: SessionType, cacheInfo: CacheInfo, credentials: Credentials): Promise<void>
+
 	/**
 	 * Full login reached: any network requests can be made
 	 */
@@ -309,7 +310,12 @@ export class LoginFacade {
 
 		if (!isAdminClient() && sessionType !== SessionType.Temporary) {
 			await this.rolloutFacade.initialize()
-			await this.keyRotationFacade.initialize(userPassphraseKey, modernKdfType)
+			this.rolloutFacade
+				.processRollout(RolloutType.AdminOrUserGroupKeyRotation, async () => {})
+				.then((keepPassphraseKey) => this.keyRotationFacade.initGroupKeyRotations(keepPassphraseKey.executed ? userPassphraseKey : null, modernKdfType))
+			this.rolloutFacade
+				.processRollout(RolloutType.GroupKeyUpdates, () => this.keyRotationFacade.loadGroupKeyUpdates())
+				.then((updates) => this.keyRotationFacade.initGroupKeyUpdates(updates.executed ? updates.result.groupKeyUpdates : []))
 		}
 
 		return {
@@ -699,11 +705,16 @@ export class LoginFacade {
 			await this.migrateKdfType(KdfType.Argon2id, passphrase, user)
 		}
 		if (!isExternalUser && !isAdminClient()) {
-			await this.rolloutFacade.initialize()
 			// We trigger group key rotation only for internal users.
 			// If we have not migrated to argon2 we postpone key rotation until next login
 			// instead of reloading the pwKey, which would be updated by the KDF migration.
-			await this.keyRotationFacade.initialize(userPassphraseKey, modernKdfType)
+			await this.rolloutFacade.initialize()
+			this.rolloutFacade
+				.processRollout(RolloutType.AdminOrUserGroupKeyRotation, async () => {})
+				.then((keepPassphraseKey) => this.keyRotationFacade.initGroupKeyRotations(keepPassphraseKey.executed ? userPassphraseKey : null, modernKdfType))
+			this.rolloutFacade
+				.processRollout(RolloutType.GroupKeyUpdates, () => this.keyRotationFacade.loadGroupKeyUpdates())
+				.then((updates) => this.keyRotationFacade.initGroupKeyUpdates(updates.executed ? updates.result.groupKeyUpdates : []))
 		}
 
 		return { type: "success", data, asyncResumeCompleted: null }

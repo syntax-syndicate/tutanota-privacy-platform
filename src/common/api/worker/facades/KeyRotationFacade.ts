@@ -20,6 +20,7 @@ import {
 	Group,
 	GroupInfoTypeRef,
 	GroupKeyRotationData,
+	GroupKeyRotationInfoGetOut,
 	GroupKeyUpdate,
 	GroupKeyUpdateData,
 	GroupKeyUpdateTypeRef,
@@ -177,7 +178,9 @@ export class KeyRotationFacade {
 	 * @private
 	 */
 	private groupIdsThatPerformedKeyRotations: Set<Id>
-	private readonly facadeInitializedDeferredObject: DeferredObject<void>
+	private readonly facadeInitialized: Promise<unknown>
+	private readonly rotationsInitializedDeferredObject: DeferredObject<void>
+	private readonly updatesInitializedDeferredObject: DeferredObject<void>
 	private pendingGroupKeyUpdateIds: IdTuple[] // already rotated groups for which we need to update the memberships (GroupKeyUpdateIds all in one list)
 
 	constructor(
@@ -203,25 +206,35 @@ export class KeyRotationFacade {
 			teamOrCustomerGroupKeyRotations: [],
 			userAreaGroupsKeyRotations: [],
 		}
-		this.facadeInitializedDeferredObject = defer<void>()
+		this.rotationsInitializedDeferredObject = defer<void>()
+		this.updatesInitializedDeferredObject = defer<void>()
+		this.facadeInitialized = Promise.all([this.rotationsInitializedDeferredObject.promise, this.updatesInitializedDeferredObject.promise])
 		this.pendingGroupKeyUpdateIds = []
 		this.groupIdsThatPerformedKeyRotations = new Set<Id>()
 	}
 
 	/**
-	 * Initialize the facade with the data it needs to perform rotations later.
+	 * Initialize the facade with the passphrase key if it needs it to perform rotations later.
 	 * Needs to be called during login when the password key is still available.
-	 * @param pwKey the user's passphrase key. May or may not be kept in memory, depending on whether a UserGroup key rotation is scheduled.
-	 * @param modernKdfType true if argon2id. no admin or user key rotation should be executed if false.
+	 * @param pwKey the user's passphrase key. Will be kept in memory until the amin or user group key is executed. Can be null if no such rotation is scheduled.
 	 */
-	public async initialize(pwKey: Aes256Key, modernKdfType: boolean) {
-		const result = await this.serviceExecutor.get(GroupKeyRotationInfoService, null)
-		if (result.userOrAdminGroupKeyRotationScheduled && modernKdfType) {
+	public async initGroupKeyRotations(pwKey: Aes256Key | null, modernKdfType: boolean) {
+		if (pwKey && modernKdfType) {
 			// If we have not migrated to argon2 we postpone key rotation until next login.
 			this.pendingKeyRotations.pwKey = pwKey
 		}
-		this.pendingGroupKeyUpdateIds = result.groupKeyUpdates
-		this.facadeInitializedDeferredObject.resolve()
+		this.rotationsInitializedDeferredObject.resolve()
+	}
+
+	/**
+	 */
+	public async initGroupKeyUpdates(groupKeyUpdates: IdTuple[]) {
+		this.pendingGroupKeyUpdateIds = groupKeyUpdates
+		this.updatesInitializedDeferredObject.resolve()
+	}
+
+	public async loadGroupKeyUpdates() {
+		return this.serviceExecutor.get(GroupKeyRotationInfoService, null)
 	}
 
 	/**
@@ -282,7 +295,7 @@ export class KeyRotationFacade {
 	 * @VisibleForTesting
 	 */
 	async processPendingKeyRotation(user: User) {
-		await this.facadeInitializedDeferredObject.promise
+		await this.facadeInitialized
 		// first admin, then user and then user area
 		try {
 			if (this.pendingKeyRotations.adminOrUserGroupKeyRotation && this.pendingKeyRotations.pwKey) {
@@ -906,11 +919,12 @@ export class KeyRotationFacade {
 	 */
 	setPendingKeyRotations(pendingKeyRotations: PendingKeyRotation) {
 		this.pendingKeyRotations = pendingKeyRotations
-		this.facadeInitializedDeferredObject.resolve()
+		this.rotationsInitializedDeferredObject.resolve()
+		this.updatesInitializedDeferredObject.resolve()
 	}
 
 	async reset() {
-		await this.facadeInitializedDeferredObject.promise
+		await this.facadeInitialized
 		this.pendingKeyRotations = {
 			pwKey: null,
 			adminOrUserGroupKeyRotation: null,

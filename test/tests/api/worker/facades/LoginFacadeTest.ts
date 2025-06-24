@@ -194,6 +194,8 @@ o.spec("LoginFacadeTest", function () {
 		eventBusClientMock = instance(EventBusClient)
 
 		facade.init(eventBusClientMock)
+
+		when(rolloutFacade.processRollout(anything(), anything())).thenResolve({ executed: false })
 	})
 
 	o.spec("Creating new sessions", function () {

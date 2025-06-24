@@ -1330,6 +1330,8 @@ export function getCurrentDate(fallback = new Date()) {
 export const enum RolloutType {
 	UserIdentityKeyCreation = "0",
 	SharedMailboxIdentityKeyCreation = "1",
+	AdminOrUserGroupKeyRotation = "2",
+	GroupKeyUpdates = "3",
 }
 
 /**
