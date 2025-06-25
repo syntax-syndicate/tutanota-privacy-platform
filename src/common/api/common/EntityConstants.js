@@ -8,6 +8,8 @@ export const Type = Object.freeze({
 	BlobElement: "BLOB_ELEMENT_TYPE",
 })
 
+export const PersistentType = "ELEMENT_TYPE" | "LIST_ELEMENT_TYPE" | "BLOB_ELEMENT_TYPE"
+
 export const Cardinality = Object.freeze({
 	// nullable values
 	ZeroOrOne: "ZeroOrOne",
