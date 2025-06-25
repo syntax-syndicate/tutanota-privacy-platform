@@ -2075,6 +2075,9 @@ styles.registerStyle("main", () => {
 			".plans-grid > div:nth-child(6)": {
 				"grid-row-start": 4,
 			},
+			".invite-tuta-flex-responsive": {
+				"flex-direction": "column",
+			},
 		},
 		"@media (max-width: 600px)": {
 			".plans-grid": {
