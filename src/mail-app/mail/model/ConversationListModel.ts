@@ -290,12 +290,13 @@ export class ConversationListModel implements MailSetListModel {
 			return alreadyLoadedMail
 		}
 
-		const mailFinder = (loadedConversation: LoadedConversation) => isSameId(loadedConversation.getDisplayedMailId(), mailId)
-
-		// conversation listing has a special case: we may want to select an item that isn't on the list but is part of
-		// a conversation that is actually in the list; as such, we should disregard what listModel says
+		// Conversation listing has a special case: we may want to select an item that isn't on the list but is part of
+		// a conversation that is actually in the list.
+		//
+		// Essentially, we keep loading until that mail is loaded and manually select its conversation once it's found
+		// rather than using loadAndSelect's return value.
 		const stop = () => this.getMail(mailId) != null || shouldStop()
-		await this.listModel.loadAndSelect(mailFinder, stop)
+		await this.listModel.loadAndSelect(() => false, stop)
 
 		const selectedMail = this.getMail(mailId)
 		if (selectedMail != null) {
@@ -304,6 +305,9 @@ export class ConversationListModel implements MailSetListModel {
 				this.getConversationForMailById(selectedMailId),
 				"somehow selecting a mail for a conversation that doesn't exist",
 			)
+
+			// The mail is not the latest in the conversation. This is a problem. To fix this, we use this fun override
+			// variable so that the conversation can be selected, but then the mail we wanted is actually displayed.
 			if (!isSameId(conversation.getDisplayedMailId(), selectedMailId)) {
 				this.olderDisplayedSelectedMailOverride = selectedMailId
 				this.listModel.onSingleSelection(conversation)
