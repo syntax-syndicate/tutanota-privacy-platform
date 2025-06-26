@@ -10,7 +10,7 @@ import { ViewSlider } from "../../../common/gui/nav/ViewSlider.js"
 import { ColumnType, ViewColumn } from "../../../common/gui/base/ViewColumn.js"
 import { SettingsFolder } from "../../../common/settings/SettingsFolder.js"
 import { LazyLoaded, lazyStringValue } from "@tutao/tutanota-utils"
-import { FeatureType, GroupType, shouldHideBusinessPlans } from "../../../common/api/common/TutanotaConstants.js"
+import { FeatureType, GroupType } from "../../../common/api/common/TutanotaConstants.js"
 import { BootIcons } from "../../../common/gui/base/icons/BootIcons.js"
 import { LoginSettingsViewer } from "../../../common/settings/login/LoginSettingsViewer.js"
 import { Icons } from "../../../common/gui/base/icons/Icons.js"
@@ -42,6 +42,7 @@ import { BaseButton } from "../../../common/gui/base/buttons/BaseButton.js"
 import { Icon, IconSize } from "../../../common/gui/base/Icon.js"
 import { showSupportDialog } from "../../../common/support/SupportDialog.js"
 import { getSupportUsageTestStage } from "../../../common/support/SupportUsageTestUtils.js"
+import { shouldHideBusinessPlans } from "../../../common/subscription/SubscriptionUtils"
 
 assertMainOrNode()
 

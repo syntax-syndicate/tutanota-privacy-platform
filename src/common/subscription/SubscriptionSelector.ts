@@ -29,13 +29,12 @@ import {
 	PaymentMethodType,
 	PlanType,
 	PlanTypeToName,
-	shouldHideBusinessPlans,
 } from "../api/common/TutanotaConstants.js"
 import { px, size } from "../gui/size.js"
 import { LoginButton, LoginButtonAttrs } from "../gui/base/buttons/LoginButton.js"
 import { isIOSApp } from "../api/common/Env"
 import { locator } from "../api/main/CommonLocator.js"
-import { hasAppleIntroOffer, shouldShowApplePrices, UpgradeType } from "./SubscriptionUtils.js"
+import { hasAppleIntroOffer, shouldShowApplePrices, UpgradeType, shouldHideBusinessPlans } from "./SubscriptionUtils.js"
 import { AccountingInfo } from "../api/entities/sys/TypeRefs.js"
 
 const BusinessUseItems: SegmentControlItem<boolean>[] = [
