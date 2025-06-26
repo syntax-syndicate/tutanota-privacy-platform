@@ -621,7 +621,6 @@ function reverseCompareMailSetId(id1: Id, id2: Id): number {
 export class LoadedConversation {
 	readonly mails: LoadedMail[] = []
 
-	private readonly mailIdsToMails: Map<Id, WeakRef<LoadedMail>> = new Map()
 	private displayedMail: LoadedMail | null = null
 	private listFilter: ListFilter<Mail> | null = null
 
@@ -639,7 +638,6 @@ export class LoadedConversation {
 			(a, b) => reverseCompareMailSetId(elementIdPart(a.mailSetEntryId), elementIdPart(b.mailSetEntryId)),
 			() => true,
 		)
-		this.mailIdsToMails.set(getElementId(mail.mail), new WeakRef(mail))
 	}
 
 	/**
@@ -649,7 +647,6 @@ export class LoadedConversation {
 	 */
 	deleteMail(mailElementId: Id) {
 		findAllAndRemove(this.mails, (mail) => getElementId(mail.mail) === mailElementId)
-		this.mailIdsToMails.delete(mailElementId)
 	}
 
 	/**
@@ -658,7 +655,7 @@ export class LoadedConversation {
 	 * @param mailElementId mail to get
 	 */
 	getLoadedMail(mailElementId: Id): LoadedMail | null {
-		return this.mailIdsToMails.get(mailElementId)?.deref() ?? null
+		return this.mails.find((mail) => getElementId(mail.mail) == mailElementId) ?? null
 	}
 
 	/**
