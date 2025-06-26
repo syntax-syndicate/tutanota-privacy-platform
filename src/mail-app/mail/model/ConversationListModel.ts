@@ -284,6 +284,12 @@ export class ConversationListModel implements MailSetListModel {
 	}
 
 	async loadAndSelect(mailId: Id, shouldStop: () => boolean): Promise<Mail | null> {
+		// If we already have it loaded, let's return it.
+		const alreadyLoadedMail = this.getMail(mailId)
+		if (alreadyLoadedMail != null) {
+			return alreadyLoadedMail
+		}
+
 		const mailFinder = (loadedConversation: LoadedConversation) => isSameId(loadedConversation.getDisplayedMailId(), mailId)
 
 		// conversation listing has a special case: we may want to select an item that isn't on the list but is part of
