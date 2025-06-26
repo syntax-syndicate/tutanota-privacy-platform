@@ -65,7 +65,32 @@ function printMap(rootIds, visited = new Set(), indentation = 0) {
 
 process.on("beforeExit", async () => {
 	const data = printMap([undefined])
-	console.log(data)
-	await fs.promises.writeFile("eslint-import.json", JSON.stringify(data, null, 4))
+	const firstEntry = Object.keys(Object.values(data)[0])[0]
+	const nodeModulesIndex = firstEntry.indexOf("node_modules")
+	const prefix = firstEntry.slice(0, nodeModulesIndex)
+	console.log("common prefix: ", prefix)
+	const dataWithStrippedPrefix = mapObjectKeys(data, (value) => {
+		if (value.startsWith(prefix)) {
+			return value.slice(nodeModulesIndex)
+		} else {
+			return value
+		}
+	})
+	await fs.promises.writeFile("eslint-import.json", JSON.stringify(dataWithStrippedPrefix, null, 4))
 	process.exit(0)
 })
+
+function mapObjectKeys(object, mapper) {
+	return Object.fromEntries(
+		Object.entries(object).map(([key, value]) => {
+			switch (typeof value) {
+				case "string":
+					return [mapper(key), value]
+				case "object":
+					return [mapper(key), mapObjectKeys(value, mapper)]
+				default:
+					throw new Error("unexpected value")
+			}
+		}),
+	)
+}
