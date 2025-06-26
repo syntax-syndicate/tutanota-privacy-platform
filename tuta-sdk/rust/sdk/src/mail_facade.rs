@@ -16,6 +16,8 @@ use crate::user_facade::UserFacade;
 use crate::GeneratedId;
 use crate::{ApiCallError, ListLoadDirection};
 use std::sync::Arc;
+use crate::element_value::ParsedEntity;
+use crate::entities::Entity;
 
 /// Provides high level functions to manipulate mail entities via the REST API
 #[derive(uniffi::Object)]
@@ -126,10 +128,13 @@ impl MailFacade {
 	pub async fn load_email_by_id_encrypted(
 		&self,
 		id_tuple: &IdTupleGenerated,
-	) -> Result<Mail, ApiCallError> {
-		self.crypto_entity_client
-			.load::<Mail, IdTupleGenerated>(id_tuple)
-			.await
+	) -> Result<ParsedEntity, ApiCallError> {
+		let mail_type_ref = Mail::type_ref();
+		let mail_type_model = self.crypto_entity_client
+		let encrypted_mail = self.entity_client.load(&mail_type_ref, id_tuple).await?;
+		let decrypted_mail = self.process_encrypted_entity(&type_model, encrypted_mail)
+				.await?;
+		Ok(decrypted_mail)
 	}
 
 	pub async fn get_group_id_for_mail_address(
