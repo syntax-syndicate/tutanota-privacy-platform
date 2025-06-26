@@ -95,7 +95,7 @@ import { DatabaseKeyFactory } from "../../../misc/credentials/DatabaseKeyFactory
 import { ExternalUserKeyDeriver } from "../../../misc/LoginUtils.js"
 import { Argon2idFacade } from "./Argon2idFacade.js"
 import { CredentialType } from "../../../misc/credentials/CredentialType.js"
-import { KeyRotationFacade } from "./KeyRotationFacade.js"
+import { KeyRotationFacade, KeyRotationRolloutAction } from "./KeyRotationFacade.js"
 import { _encryptString } from "../crypto/CryptoWrapper.js"
 import { CacheManagementFacade } from "./lazy/CacheManagementFacade.js"
 import { InstancePipeline } from "../crypto/InstancePipeline"
@@ -308,14 +308,8 @@ export class LoginFacade {
 			.onPartialLoginSuccess(sessionType, cacheInfo, credentials)
 			.finally(() => this.loginListener.onFullLoginSuccess(sessionType, cacheInfo, credentials))
 
-		if (!isAdminClient() && sessionType !== SessionType.Temporary) {
-			await this.rolloutFacade.initialize()
-			this.rolloutFacade
-				.processRollout(RolloutType.AdminOrUserGroupKeyRotation, async () => {})
-				.then((keepPassphraseKey) => this.keyRotationFacade.initGroupKeyRotations(keepPassphraseKey.executed ? userPassphraseKey : null, modernKdfType))
-			this.rolloutFacade
-				.processRollout(RolloutType.GroupKeyUpdates, () => this.keyRotationFacade.loadGroupKeyUpdates())
-				.then((updates) => this.keyRotationFacade.initGroupKeyUpdates(updates.executed ? updates.result.groupKeyUpdates : []))
+		if (modernKdfType && sessionType !== SessionType.Temporary) {
+			await this.initializeClientRollouts(userPassphraseKey)
 		}
 
 		return {
@@ -326,6 +320,23 @@ export class LoginFacade {
 			// we always try to make a persistent cache with a key for persistent session, but this
 			// falls back to ephemeral cache in browsers. no point storing the key then.
 			databaseKey: cacheInfo.isPersistent ? databaseKey : null,
+		}
+	}
+
+	private async initializeClientRollouts(userPassphraseKey: AesKey) {
+		// configure key rotation rollouts. For admin group key or user group key rotation we need access to the password key.
+		// We bind this here to the rollout action. The actaual key rotation is then executed after the client synchronized.
+		if (!isAdminClient()) {
+			const rollouts = await this.rolloutFacade.initialize()
+			for (const rollout of rollouts) {
+				const rolloutType = rollout.rolloutType
+				if (rolloutType === RolloutType.AdminOrUserGroupKeyRotation || rolloutType == RolloutType.OtherGroupKeyRotation) {
+					this.rolloutFacade.configureRollout(
+						rolloutType,
+						new KeyRotationRolloutAction(this.keyRotationFacade, this.userFacade, rolloutType, userPassphraseKey),
+					)
+				}
+			}
 		}
 	}
 
@@ -704,19 +715,10 @@ export class LoginFacade {
 			const passphrase = utf8Uint8ArrayToString(aesDecrypt(accessKey, base64ToUint8Array(credentials.encryptedPassword)))
 			await this.migrateKdfType(KdfType.Argon2id, passphrase, user)
 		}
-		if (!isExternalUser && !isAdminClient()) {
-			// We trigger group key rotation only for internal users.
-			// If we have not migrated to argon2 we postpone key rotation until next login
-			// instead of reloading the pwKey, which would be updated by the KDF migration.
-			await this.rolloutFacade.initialize()
-			this.rolloutFacade
-				.processRollout(RolloutType.AdminOrUserGroupKeyRotation, async () => {})
-				.then((keepPassphraseKey) => this.keyRotationFacade.initGroupKeyRotations(keepPassphraseKey.executed ? userPassphraseKey : null, modernKdfType))
-			this.rolloutFacade
-				.processRollout(RolloutType.GroupKeyUpdates, () => this.keyRotationFacade.loadGroupKeyUpdates())
-				.then((updates) => this.keyRotationFacade.initGroupKeyUpdates(updates.executed ? updates.result.groupKeyUpdates : []))
-		}
 
+		if (modernKdfType) {
+			await this.initializeClientRollouts(userPassphraseKey)
+		}
 		return { type: "success", data, asyncResumeCompleted: null }
 	}
 

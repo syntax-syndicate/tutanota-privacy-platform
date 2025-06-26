@@ -29,8 +29,9 @@ import {
 	KeyPairTypeRef,
 	User,
 	UserTypeRef,
+	WebsocketLeaderStatusTypeRef,
 } from "../../../../../src/common/api/entities/sys/TypeRefs.js"
-import { createTestEntity } from "../../../TestUtils.js"
+import { createTestEntity, withOverriddenEnv } from "../../../TestUtils.js"
 import { EntityClient } from "../../../../../src/common/api/common/EntityClient.js"
 import { matchers, object, reset, verify, when } from "testdouble"
 import { checkKeyVersionConstraints, KeyLoaderFacade, parseKeyVersion } from "../../../../../src/common/api/worker/facades/KeyLoaderFacade.js"
@@ -43,6 +44,9 @@ import { CryptoWrapper, VersionedKey } from "../../../../../src/common/api/worke
 import { KeyVersion } from "@tutao/tutanota-utils/dist/Utils.js"
 import { CryptoError } from "@tutao/tutanota-crypto/error.js"
 import { RSA_TEST_KEYPAIR } from "./RsaPqPerformanceTest.js"
+import { Mode } from "../../../../../src/common/api/common/Env"
+import { AccountType, RolloutType } from "../../../../../src/common/api/common/TutanotaConstants"
+import { KeyRotationFacade, KeyRotationRolloutAction } from "../../../../../src/common/api/worker/facades/KeyRotationFacade"
 
 o.spec("KeyLoaderFacadeTest", function () {
 	let keyCache: KeyCache
@@ -426,6 +430,34 @@ o.spec("KeyLoaderFacadeTest", function () {
 
 				verify(cacheManagementFacade.refreshKeyCache(group._id), { times: 1 })
 			})
+		})
+	})
+	o.spec("KeyRotationRolloutAction", function () {
+		o("Execute key rotations and delete the passphrase key afterwards", async function () {
+			const keyRotationFacadeMock: KeyRotationFacade = object()
+			const userFacadeMock: UserFacade = object()
+			const user: User = object()
+			when(userFacadeMock.getUser()).thenReturn(user)
+
+			const rolloutType = RolloutType.AdminOrUserGroupKeyRotation
+			const passphraseKey: AesKey = object()
+
+			const rolloutAction = new KeyRotationRolloutAction(keyRotationFacadeMock, userFacadeMock, rolloutType, passphraseKey)
+			await rolloutAction.execute()
+			verify(keyRotationFacadeMock.processPendingKeyRotations(user, passphraseKey), { times: 1 })
+		})
+
+		o(" if we are an external user, do not execute", async function () {
+			const keyRotationFacadeMock: KeyRotationFacade = object()
+			const userFacadeMock: UserFacade = object()
+			const user: User = object()
+			user.accountType = AccountType.EXTERNAL
+
+			when(userFacadeMock.getUser()).thenReturn(user)
+
+			const rolloutType = RolloutType.AdminOrUserGroupKeyRotation
+
+			verify(keyRotationFacadeMock.processPendingKeyRotations(matchers.anything(), matchers.anything()), { times: 0 })
 		})
 	})
 })

@@ -1331,7 +1331,7 @@ export const enum RolloutType {
 	UserIdentityKeyCreation = "0",
 	SharedMailboxIdentityKeyCreation = "1",
 	AdminOrUserGroupKeyRotation = "2",
-	GroupKeyUpdates = "3",
+	OtherGroupKeyRotation = "3",
 }
 
 /**

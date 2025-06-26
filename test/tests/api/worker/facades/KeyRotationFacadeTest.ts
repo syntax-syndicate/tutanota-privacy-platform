@@ -397,12 +397,12 @@ function prepareMultiAdminUserKeyRotation(
 		adminDistKeyPair: encryptedAdminDistKeyPair,
 		adminPubKeyMac: null,
 	})
-	keyRotationFacade.setPendingKeyRotations({
-		pwKey: PW_KEY,
-		adminOrUserGroupKeyRotation: userGroupKeyRotation,
-		teamOrCustomerGroupKeyRotations: [],
-		userAreaGroupsKeyRotations: [],
-	})
+	//  keyRotationFacade.setPendingKeyRotations({
+	// 	pwKey: PW_KEY,
+	// 	adminOrUserGroupKeyRotation: userGroupKeyRotation,
+	// 	teamOrCustomerGroupKeyRotations: [],
+	// 	userAreaGroupsKeyRotations: [],
+	// })
 
 	when(mocks.keyLoaderFacade.getCurrentSymGroupKey(adminGroupId)).thenResolve(CURRENT_ADMIN_GROUP_KEY)
 
@@ -2208,7 +2208,7 @@ o.spec("KeyRotationFacade", function () {
 				const terror = new LockedError("test error")
 				when(entityClientMock.load(UserGroupRootTypeRef, anything())).thenReject(terror)
 				const log = (console.log = spy(console.log))
-				await keyRotationFacade.processPendingKeyRotationsAndUpdates(object())
+				await keyRotationFacade.processPendingKeyRotations(object())
 				//make sure we do not throw
 				//make sure we log the error to console
 				o(log.callCount).equals(1)
@@ -2217,7 +2217,7 @@ o.spec("KeyRotationFacade", function () {
 			o("loadPendingKeyRotations other Errors are thrown", async function () {
 				const terror = new Error("test error")
 				when(entityClientMock.load(UserGroupRootTypeRef, anything())).thenReject(terror)
-				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotationsAndUpdates(object()))
+				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotations(object()))
 			})
 
 			o("processPendingKeyRotation LockedError is caught", async function () {
@@ -2229,7 +2229,7 @@ o.spec("KeyRotationFacade", function () {
 					throw terror
 				})
 				const log = (console.log = spy(console.log))
-				await keyRotationFacade.processPendingKeyRotationsAndUpdates(object())
+				await keyRotationFacade.processPendingKeyRotations(object())
 				//make sure we do not throw
 				//make sure we log the error to console
 				o(log.callCount).equals(1)
@@ -2243,7 +2243,7 @@ o.spec("KeyRotationFacade", function () {
 				mockAttribute(keyRotationFacade, keyRotationFacade.processPendingKeyRotation, () => {
 					throw terror
 				})
-				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotationsAndUpdates(object()))
+				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotations(object()))
 			})
 
 			o("updateGroupMemberships LockedError is caught", async function () {
@@ -2258,7 +2258,7 @@ o.spec("KeyRotationFacade", function () {
 
 				const log = (console.log = spy(console.log))
 
-				await keyRotationFacade.processPendingKeyRotationsAndUpdates(object())
+				await keyRotationFacade.processPendingKeyRotations(object())
 				//make sure we do not throw
 				//make sure we log the error to console
 				o(log.callCount).equals(1)
@@ -2274,7 +2274,7 @@ o.spec("KeyRotationFacade", function () {
 					throw terror
 				})
 
-				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotationsAndUpdates(object()))
+				await assertThrows(Error, async () => keyRotationFacade.processPendingKeyRotations(object()))
 			})
 		})
 	})
