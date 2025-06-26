@@ -408,6 +408,8 @@ o.spec("ConversationListModel", () => {
 				operation: OperationType.DELETE,
 			}
 
+			const oldMails = model.mails
+
 			entityUpdateData.operation = OperationType.UPDATE
 			await model.handleEntityUpdate(entityUpdateData)
 			o(model.getLabelsForMail(someMail.mail)[1]).deepEquals(labels[1])
@@ -415,6 +417,10 @@ o.spec("ConversationListModel", () => {
 			// verify getLabelsForMail call times (someMail was queried twice, but other mails only once)
 			verify(mailModel.getLabelsForMail(someMail.mail), { times: 2 })
 			verify(mailModel.getLabelsForMail(model.mails[someIndex + 1]), { times: 1 })
+
+			// does not break referential equality with mails (items is not guaranteed and is usually broken if *any*
+			// update is made to the list)
+			o.check(model.mails).equals(oldMails)
 		})
 
 		o.test("mailset delete does nothing", async () => {
@@ -429,8 +435,15 @@ o.spec("ConversationListModel", () => {
 			}
 			entityUpdateData.operation = OperationType.DELETE
 
+			const oldMails = model.mails
+			const oldItems = model.items
+
 			await model.handleEntityUpdate(entityUpdateData)
 			o(model.mails.length).equals(PageSize)
+
+			// no change to referential equality
+			o.check(model.items).equals(oldItems)
+			o.check(model.mails).equals(oldMails)
 		})
 
 		o.test("deleting a mail set entry", async () => {
@@ -654,9 +667,18 @@ o.spec("ConversationListModel", () => {
 			when(entityClient.load(MailTypeRef, mail._id)).thenResolve(mail)
 
 			entityUpdateData.operation = OperationType.UPDATE
+
+			const oldMails = model.mails
+			const oldItems = model.items
+
 			await model.handleEntityUpdate(entityUpdateData)
+
 			o(model.getMail(getElementId(mail))).deepEquals(mail)
 			o(model.getLabelsForMail(mail)).deepEquals([])
+
+			// Referential equality is broken
+			o.check(model.mails).notEquals(oldMails)
+			o.check(model.items).notEquals(oldItems)
 		})
 
 		o.test("mail delete does nothing", async () => {

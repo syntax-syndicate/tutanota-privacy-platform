@@ -168,17 +168,19 @@ export class ConversationListModel implements MailSetListModel {
 
 	private async handleMailUpdate(update: EntityUpdateData, mailItem: LoadedMail) {
 		const newMailData = await this.entityClient.load(MailTypeRef, [update.instanceListId, update.instanceId])
-		const labels = this.mailModel.getLabelsForMail(newMailData) // in case labels were added/removed
-		const loadedMail = {
-			...mailItem,
-			labels,
-			mail: newMailData,
-		}
-
 		const conversation = this.getConversationForMail(newMailData)
+
 		if (conversation != null) {
+			const labels = this.mailModel.getLabelsForMail(newMailData) // in case labels were added/removed
+			const loadedMail = {
+				...mailItem,
+				labels,
+				mail: newMailData,
+			}
+
 			conversation.insertOrUpdateMail(loadedMail)
 			this.updateConversation(conversation)
+			this.reinitMailArrays() // break referential equality since mails was changed
 		}
 	}
 
@@ -554,24 +556,50 @@ export class ConversationListModel implements MailSetListModel {
 		return this.entityClient.loadMultiple(MailTypeRef, listId, elements)
 	}
 
-	private readonly _items: () => readonly Mail[] = memoizedWithHiddenArgument(
-		() => this.listModel.state.items,
-		(conversations) => this.getDisplayedMailsOfConversations(conversations),
-	)
+	private _items = this.initItemsArray()
 
-	private _mails = memoizedWithHiddenArgument(
-		() => this.mailToConversationMap,
-		(mailMap) =>
-			Array.from(mailMap.keys()).map((mail) =>
-				assertNotNull(
-					this.getMail(mail),
+	private _mails = this.initMailsArray()
 
-					// When adding a mail, mailToConversationMap is updated last, while when removing a mail, it is updated
-					// first. As such, there is no condition where getMail would fail.
-					"broken mailMap reference",
+	/**
+	 * (Re)initialize the mails array
+	 */
+	private initMailsArray(): () => readonly Mail[] {
+		this._mails = memoizedWithHiddenArgument(
+			() => this.mailToConversationMap,
+			(mailMap) =>
+				Array.from(mailMap.keys()).map((mail) =>
+					assertNotNull(
+						this.getMail(mail),
+
+						// When adding a mail, mailToConversationMap is updated last, while when removing a mail, it is updated
+						// first. As such, there is no condition where getMail would fail.
+						"broken mailMap reference",
+					),
 				),
-			),
-	)
+		)
+		return this._mails
+	}
+
+	/**
+	 * (Re)initialize the items array
+	 */
+	private initItemsArray(): () => readonly Mail[] {
+		this._items = memoizedWithHiddenArgument(
+			() => this.listModel.state.items,
+			(conversations) => this.getDisplayedMailsOfConversations(conversations),
+		)
+		return this._items
+	}
+
+	/**
+	 * Reinit both mail arrays.
+	 *
+	 * This can be called manually to break any referential equality with an older array reference.
+	 */
+	private reinitMailArrays() {
+		this.initMailsArray()
+		this.initItemsArray()
+	}
 
 	private getDisplayedMailsOfConversations(conversations: readonly LoadedConversation[]): Mail[] {
 		return conversations.map((conversation) => conversation.getDisplayedMail()?.mail).filter(isNotNull)
