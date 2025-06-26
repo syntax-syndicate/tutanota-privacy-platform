@@ -87,9 +87,6 @@ export class ConversationListModel implements MailSetListModel {
 
 		// Filtering is handled on the conversation's side, as it has access to all of its mails. We just need to hide
 		// conversations that are completely filtered out (i.e. no mail in it fits the filter)
-		//
-		// We want to set this filter immediately, as a conversation may (briefly) have no displayed mail but might
-		// still linger in the list model (i.e. due to some async call).
 		this.listModel.setFilter((conversation: LoadedConversation) => conversation.getDisplayedMail() != null)
 	}
 
@@ -216,15 +213,16 @@ export class ConversationListModel implements MailSetListModel {
 		}
 
 		this.deleteMailToConversationMapping(mailId)
-		conversation.deleteMail(mailId)
 
-		// if conversation.mails is empty, the displayed mail will go away, too; then the async deleteLoadedItem can
-		// take its time
-		this.updateConversation(conversation)
-
-		if (isEmpty(conversation.mails)) {
+		if (conversation.mails.length === 1) {
+			// It's the last mail in the conversation, so we will want to remove the conversation instead of the mail.
+			// This is so we can still have sorting so the list model can determine what the next conversation is (for
+			// the move mail behavior).
 			this.conversationMap.delete(conversation.conversationId)
 			await this.listModel.deleteLoadedItem(conversation.conversationId)
+		} else {
+			conversation.deleteMail(mailId)
+			this.updateConversation(conversation)
 		}
 	}
 
