@@ -39,7 +39,7 @@ import { SURVEY_VERSION_NUMBER } from "./LeavingUserSurveyConstants.js"
 import { isIOSApp } from "../api/common/Env.js"
 import { MobilePaymentSubscriptionOwnership } from "../native/common/generatedipc/MobilePaymentSubscriptionOwnership.js"
 import { showManageThroughAppStoreDialog } from "./PaymentViewer.js"
-import { appStorePlanName, hasRunningAppStoreSubscription } from "./SubscriptionUtils.js"
+import { appStorePlanName, hasRunningAppStoreSubscription, shouldShowApplePrices } from "./SubscriptionUtils.js"
 import { MobilePaymentError } from "../api/common/error/MobilePaymentError.js"
 import { mailLocator } from "../../mail-app/mailLocator"
 import { client } from "../misc/ClientDetector.js"
@@ -51,6 +51,7 @@ import { getPrivateBusinessSwitchButton } from "./VariantCSubscriptionPage.js"
  * Allows cancelling the subscription (only private use) and switching the subscription to a different paid subscription.
  * Note: Only shown if the user is already a Premium user.
  */
+// FIXME: Use useNewPlanSelector flag to display the new selector only for the switch from the setting
 export async function showSwitchDialog({
 	customer,
 	accountingInfo,
@@ -88,12 +89,13 @@ export async function showSwitchDialog({
 	const paymentInterval = stream(PaymentInterval.Yearly) // always default to yearly
 	const options = { businessUse, paymentInterval }
 	const multipleUsersAllowed = model.multipleUsersStillSupportedLegacy()
+	const isApplePrice = shouldShowApplePrices(accountingInfo)
 
 	if (currentPlanInfo.planType != null && LegacyPlans.includes(currentPlanInfo.planType)) {
 		reason = "currentPlanDiscontinued_msg"
 	}
 
-	const headerBarAttrs: DialogHeaderBarAttrs = {
+	const newPlanSelectorHeaderBarAttrs: DialogHeaderBarAttrs = {
 		left: [
 			{
 				label: "cancel_action",
@@ -101,52 +103,83 @@ export async function showSwitchDialog({
 				type: ButtonType.Secondary,
 			},
 		],
-		right: [getPrivateBusinessSwitchButton(businessUse)],
+		right: isApplePrice || !useNewPlanSelector ? [] : [getPrivateBusinessSwitchButton(businessUse)],
 		middle: "subscription_label",
 	}
 
-	const dialog: Dialog = Dialog.largeDialog(headerBarAttrs, {
-		view: () => {
-			// Need to reassign the right button to update the label
-			headerBarAttrs.right = [getPrivateBusinessSwitchButton(businessUse)]
-			if (businessUse()) {
-				return m(".pt", [
-					m(SubscriptionSelector, {
-						options,
-						priceInfoTextId: priceAndConfigProvider.getPriceInfoMessage(),
-						boxWidth: 230,
-						boxHeight: 270,
-						acceptedPlans: NewBusinessPlans.filter((businessPlan) => acceptedPlans.includes(businessPlan)),
-						// FIXME: In which situation we need to hide the payment interval switch?
-						allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
-						currentPlanType: currentPlanInfo.planType,
-						actionButtons: subscriptionActionButtons,
-						featureListProvider: featureListProvider,
-						priceAndConfigProvider,
-						multipleUsersAllowed,
-						msg: reason,
-						accountingInfo: accountingInfo,
-					}),
-				])
-			}
-
-			return m(
-				".pt",
-				// Headline for general messages
-				reason && m(".flex-center.items-center.gap-hpad.mb", m(".b.center.smaller", lang.getTranslationText(reason))),
-				m(PlanSelector, {
+	const renderNewPlanSelector = () => {
+		// Need to reassign the right button to update the label
+		if (!isApplePrice) {
+			newPlanSelectorHeaderBarAttrs.right = [getPrivateBusinessSwitchButton(businessUse)]
+		}
+		if (businessUse()) {
+			return m(".pt", [
+				m(SubscriptionSelector, {
 					options,
-					actionButtons: subscriptionActionButtons,
-					priceAndConfigProvider,
-					// hasCampaign: hasCampaign && data.options.paymentInterval() === PaymentInterval.Yearly,
-					hasCampaign: false,
-					availablePlans: acceptedPlans,
-					isApplePrice: false,
-					currentPlan: currentPlanInfo.planType,
+					priceInfoTextId: priceAndConfigProvider.getPriceInfoMessage(),
+					boxWidth: 230,
+					boxHeight: 270,
+					acceptedPlans: NewBusinessPlans.filter((businessPlan) => acceptedPlans.includes(businessPlan)),
+					// FIXME: In which situation we need to hide the payment interval switch?
 					allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
-					showMultiUser: multipleUsersAllowed,
+					currentPlanType: currentPlanInfo.planType,
+					actionButtons: subscriptionActionButtons,
+					featureListProvider: featureListProvider,
+					priceAndConfigProvider,
+					multipleUsersAllowed,
+					msg: reason,
+					accountingInfo: accountingInfo,
 				}),
-			)
+			])
+		}
+
+		return m(
+			".pt",
+			// Headline for general messages
+			reason && m(".flex-center.items-center.gap-hpad.mb", m(".b.center.smaller", lang.getTranslationText(reason))),
+			m(PlanSelector, {
+				options,
+				actionButtons: subscriptionActionButtons,
+				priceAndConfigProvider,
+				// FIXME: add campaign handling
+				// hasCampaign: hasCampaign && data.options.paymentInterval() === PaymentInterval.Yearly,
+				hasCampaign: false,
+				availablePlans: acceptedPlans,
+				isApplePrice,
+				currentPlan: currentPlanInfo.planType,
+				allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
+				showMultiUser: multipleUsersAllowed,
+			}),
+		)
+	}
+
+	const renderOldPlanSelector = () => {
+		return m(
+			".pt",
+			m(SubscriptionSelector, {
+				options: {
+					businessUse,
+					paymentInterval: paymentInterval,
+				},
+				priceInfoTextId: priceAndConfigProvider.getPriceInfoMessage(),
+				msg: reason,
+				boxWidth: 230,
+				boxHeight: 270,
+				acceptedPlans: acceptedPlans,
+				currentPlanType: currentPlanInfo.planType,
+				accountingInfo,
+				allowSwitchingPaymentInterval: currentPlanInfo.paymentInterval !== PaymentInterval.Yearly,
+				actionButtons: subscriptionActionButtons,
+				featureListProvider: featureListProvider,
+				priceAndConfigProvider,
+				multipleUsersAllowed,
+			}),
+		)
+	}
+
+	const dialog: Dialog = Dialog.largeDialog(newPlanSelectorHeaderBarAttrs, {
+		view: () => {
+			return useNewPlanSelector ? renderNewPlanSelector() : renderOldPlanSelector()
 		},
 	})
 		.addShortcut({
@@ -280,6 +313,7 @@ function createPlanButton(
 		...(shouldApplyDiscount && { class: "go-european-button" }),
 		onclick: async () => {
 			if (
+				// FIXME: The text should be different from "upgrade"
 				await Dialog.confirm(lang.getTranslation("upgradePlan_msg", { "{plan}": PlanTypeToName[targetSubscription] }), "paymentDataValidation_action")
 			) {
 				await showProgressDialog(
